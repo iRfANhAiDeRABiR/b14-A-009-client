@@ -1,3 +1,5 @@
+import { clearAccessTokenCache, getAccessToken } from "@/lib/token-provider";
+
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   /\/+$/,
   ""
@@ -25,7 +27,8 @@ function createServiceUnavailableError(message) {
  * GET {NEXT_PUBLIC_API_BASE_URL}/api/favorites
  */
 export async function getFavorites({ token } = {}) {
-  if (!token) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
     return {
       items: [],
       error: null,
@@ -46,12 +49,13 @@ export async function getFavorites({ token } = {}) {
       method: "GET",
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${activeToken}`,
       },
       cache: "no-store",
     });
 
     if (response.status === 401 || response.status === 403) {
+      clearAccessTokenCache();
       return {
         items: [],
         error: "Session expired or unauthorized. Please sign in again.",
@@ -94,7 +98,8 @@ export async function getFavorites({ token } = {}) {
  * POST {NEXT_PUBLIC_API_BASE_URL}/api/favorites { equipmentId }
  */
 export async function addFavorite({ equipmentId, token } = {}) {
-  if (!token) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
     throw createUnauthorizedError();
   }
   if (!API_BASE_URL) {
@@ -106,12 +111,13 @@ export async function addFavorite({ equipmentId, token } = {}) {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${activeToken}`,
     },
     body: JSON.stringify({ equipmentId }),
   });
 
   if (response.status === 401 || response.status === 403) {
+    clearAccessTokenCache();
     throw createUnauthorizedError();
   }
 
@@ -130,7 +136,8 @@ export async function addFavorite({ equipmentId, token } = {}) {
  * DELETE {NEXT_PUBLIC_API_BASE_URL}/api/favorites/:equipmentId
  */
 export async function removeFavorite({ equipmentId, token } = {}) {
-  if (!token) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
     throw createUnauthorizedError();
   }
   if (!API_BASE_URL) {
@@ -143,12 +150,13 @@ export async function removeFavorite({ equipmentId, token } = {}) {
       method: "DELETE",
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${activeToken}`,
       },
     }
   );
 
   if (response.status === 401 || response.status === 403) {
+    clearAccessTokenCache();
     throw createUnauthorizedError();
   }
 

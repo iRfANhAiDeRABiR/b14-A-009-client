@@ -15,6 +15,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
+import { useAuth } from "@/hooks/useAuth";
 import { buildLoginRedirectUrl } from "@/lib/authBoundary";
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
 import { useEquipmentDetails } from "@/hooks/useEquipmentDetails";
@@ -82,8 +83,12 @@ export function EquipmentDetails({ equipmentId }) {
   const prefersReducedMotion = useReducedMotion();
   const [bookingModalOpen, setBookingModalOpen] = React.useState(false);
 
-  const { item, notFound, source, error, auth, loading, retry } =
-    useEquipmentDetails(equipmentId);
+  const auth = useAuth();
+  const { item, notFound, source, error, loading, retry } =
+    useEquipmentDetails(equipmentId, {
+      token: auth.token,
+      authLoading: auth.isLoading || !auth.isAuthenticated,
+    });
 
   const {
     isFavorite,
@@ -98,14 +103,13 @@ export function EquipmentDetails({ equipmentId }) {
   const currentPath = `/equipment/${encodeURIComponent(equipmentId || "")}`;
   const loginRedirectUrl = buildLoginRedirectUrl(currentPath);
 
-  // Enforce automatic redirect to /login once Better Auth is configured in Commit 08.
   React.useEffect(() => {
-    if (!loading && auth.isAuthConfigured && !auth.isAuthenticated) {
+    if (!auth.isLoading && !auth.isAuthenticated) {
       router.replace(loginRedirectUrl);
     }
-  }, [auth.isAuthConfigured, auth.isAuthenticated, loading, loginRedirectUrl, router]);
+  }, [auth.isAuthenticated, auth.isLoading, loginRedirectUrl, router]);
 
-  if (loading || (auth.isAuthConfigured && !auth.isAuthenticated)) {
+  if (auth.isLoading || !auth.isAuthenticated || loading) {
     return <EquipmentDetailsSkeleton />;
   }
 

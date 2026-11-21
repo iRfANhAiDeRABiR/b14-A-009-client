@@ -1,16 +1,17 @@
-import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+import { Suspense } from "react";
+import { AuthPageSkeleton } from "@/components/auth/AuthSkeletons";
+import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata = {
   title: "Login",
+  description:
+    "Sign in to your GearNest account to manage equipment rentals, favorites, and dashboard workflows.",
 };
 
 export default function LoginPage() {
   return (
-    <ComingSoonPage
-      eyebrow="Account Access"
-      title="Sign In to GearNest"
-      description="Email, password, and Google social authentication powered by BetterAuth will be connected in the authentication milestone."
-      secondaryAction={{ label: "Create an Account", href: "/register" }}
-    />
+    <Suspense fallback={<AuthPageSkeleton />}>
+      <LoginForm />
+    </Suspense>
   );
 }

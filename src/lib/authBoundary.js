@@ -1,31 +1,50 @@
+import { authClient, isAuthBackendConfigured } from "@/lib/auth-client";
+import { buildLoginRedirectUrl } from "@/lib/authValidation";
+import { getAccessToken } from "@/lib/token-provider";
+
+export const IS_AUTH_CONFIGURED = true;
+
+export { buildLoginRedirectUrl };
+
 /**
- * Authentication integration boundary for private routes and protected API actions.
- *
- * Better Auth will be wired here in Client Commit 08. Until then, this module
- * strictly fails closed: no fake logged-in users, no mock tokens, and no
- * unauthenticated bypass for favorites or booking creation.
+ * Asynchronous auth state reader for service/non-hook callers.
+ * Fails closed unless a real Better Auth session cookie is active.
  */
-
-export const IS_AUTH_CONFIGURED = false;
-
-export function buildLoginRedirectUrl(destinationPath = "/") {
-  const safePath =
-    typeof destinationPath === "string" && destinationPath.startsWith("/")
-      ? destinationPath
-      : "/";
-
-  if (safePath.startsWith("/login")) {
-    return "/login";
+export async function getAuthState() {
+  if (!isAuthBackendConfigured) {
+    return {
+      isAuthConfigured: IS_AUTH_CONFIGURED,
+      isBackendConfigured: false,
+      isAuthenticated: false,
+      user: null,
+      session: null,
+      token: null,
+    };
   }
 
-  return `/login?redirectTo=${encodeURIComponent(safePath)}`;
-}
+  try {
+    const result = await authClient.getSession();
+    const user = result?.data?.user ?? null;
+    const session = result?.data?.session ?? null;
+    const isAuthenticated = Boolean(user && session);
+    const token = isAuthenticated ? await getAccessToken() : null;
 
-export async function getAuthState() {
-  return {
-    isAuthConfigured: IS_AUTH_CONFIGURED,
-    isAuthenticated: false,
-    user: null,
-    token: null,
-  };
+    return {
+      isAuthConfigured: IS_AUTH_CONFIGURED,
+      isBackendConfigured: true,
+      isAuthenticated,
+      user,
+      session,
+      token,
+    };
+  } catch {
+    return {
+      isAuthConfigured: IS_AUTH_CONFIGURED,
+      isBackendConfigured: true,
+      isAuthenticated: false,
+      user: null,
+      session: null,
+      token: null,
+    };
+  }
 }

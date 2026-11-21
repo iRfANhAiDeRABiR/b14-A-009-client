@@ -2,14 +2,34 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { LayoutDashboard, LogIn, LogOut, Menu, UserPlus, X } from "lucide-react";
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+  Menu,
+  User,
+  UserPlus,
+  X,
+} from "lucide-react";
 
+import { AuthContext } from "@/context/AuthProvider";
+import { useToast } from "@/context/ToastContext";
+import {
+  getDashboardHomeByRole,
+  getRoleBadgeVariant,
+  getRoleLabel,
+  getRoleNavLinks,
+  normalizeUserRole,
+} from "@/lib/roleNavigation";
 import { SITE_CONFIG } from "@/lib/site-config";
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
 function isActivePath(pathname, href) {
@@ -17,33 +37,132 @@ function isActivePath(pathname, href) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/**
- * Shared responsive marketplace navbar.
- * Accepts optional `auth` props for future BetterAuth integration without
- * introducing fake sessions or hardcoded user data.
- */
-export function Navbar({ auth = null }) {
-  const pathname = usePathname() || "/";
-  const prefersReducedMotion = useReducedMotion();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+function UserAvatar({ user, sizeClass = "size-8" }) {
+  if (user?.image) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={user.image}
+        alt={user.name || "User avatar"}
+        className={cn(
+          "shrink-0 rounded-full border border-border bg-surface-subtle object-cover",
+          sizeClass
+        )}
+      />
+    );
+  }
 
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground",
+        sizeClass
+      )}
+    >
+      <User className="size-4" />
+    </span>
+  );
+}
+
+/**
+ * Shared responsive marketplace navbar connected to live Better Auth session
+ * state via AuthContext, with optional `auth` override for isolated renders.
+ */
+export function Navbar({ auth: authOverride = null }) {
+  const pathname = usePathname() || "/";
+  const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
+  const { showToast } = useToast();
+  const contextAuth = React.useContext(AuthContext);
+
+  const auth = authOverride || contextAuth;
   const isAuthenticated = Boolean(auth?.isAuthenticated);
-  const dashboardHref = auth?.dashboardHref || SITE_CONFIG.authLinks.dashboard.href;
+  const isSessionLoading = Boolean(auth?.isLoading) && !authOverride;
+  const user = auth?.user || null;
+  const normalizedRole = user ? normalizeUserRole(auth?.role || user.role) : null;
+  const roleLabel =
+    auth?.roleLabel || (normalizedRole ? getRoleLabel(normalizedRole) : null);
+  const roleBadgeVariant =
+    auth?.roleBadgeVariant ||
+    (normalizedRole ? getRoleBadgeVariant(normalizedRole) : "primary");
+  const dashboardHref =
+    auth?.dashboardHref ||
+    (normalizedRole
+      ? getDashboardHomeByRole(normalizedRole)
+      : SITE_CONFIG.authLinks.dashboard.href);
+  const roleNavLinks =
+    auth?.roleNavLinks ||
+    (normalizedRole ? getRoleNavLinks(normalizedRole) : []);
+
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const accountMenuRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!mobileOpen) return;
+    if (!mobileOpen && !accountMenuOpen) return;
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         setMobileOpen(false);
+        setAccountMenuOpen(false);
+      }
+    };
+
+    const handlePointerDown = (event) => {
+      if (
+        accountMenuOpen &&
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target)
+      ) {
+        setAccountMenuOpen(false);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mobileOpen]);
+    window.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [accountMenuOpen, mobileOpen]);
 
   const closeMenu = () => setMobileOpen(false);
+  const closeAccountMenu = () => setAccountMenuOpen(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    closeMenu();
+    closeAccountMenu();
+
+    try {
+      if (typeof auth?.onLogout === "function") {
+        await auth.onLogout();
+      } else if (typeof auth?.logout === "function") {
+        await auth.logout();
+      }
+      showToast({
+        title: "Signed out",
+        description: "Your GearNest session has ended cleanly.",
+        variant: "neutral",
+      });
+      if (pathname.startsWith("/dashboard")) {
+        router.replace("/login");
+      }
+    } catch {
+      showToast({
+        title: "Logout issue",
+        description: "Unable to complete sign out cleanly. Please refresh.",
+        variant: "warning",
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const displayName = user?.name || user?.email || "Account";
 
   return (
     <header
@@ -90,8 +209,81 @@ export function Navbar({ auth = null }) {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
-          {isAuthenticated ? (
+          {isSessionLoading ? (
+            <div className="flex items-center gap-2" aria-hidden="true">
+              <Skeleton className="h-10 w-24 rounded-lg" />
+              <Skeleton className="h-10 w-24 rounded-lg" />
+            </div>
+          ) : isAuthenticated ? (
             <>
+              {/* Account & Role Portal Dropdown */}
+              <div ref={accountMenuRef} className="relative">
+                <button
+                  type="button"
+                  aria-expanded={accountMenuOpen}
+                  aria-controls="navbar-role-menu"
+                  onClick={() => setAccountMenuOpen((prev) => !prev)}
+                  className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <UserAvatar user={user} sizeClass="size-7" />
+                  <span className="max-w-28 truncate">{displayName}</span>
+                  {roleLabel ? (
+                    <Badge variant={roleBadgeVariant} size="sm">
+                      {roleLabel}
+                    </Badge>
+                  ) : null}
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={cn(
+                      "size-4 text-muted transition-transform duration-150",
+                      accountMenuOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                {accountMenuOpen ? (
+                  <div
+                    id="navbar-role-menu"
+                    role="menu"
+                    aria-label="Account role menu"
+                    className="absolute right-0 mt-2 w-64 rounded-xl border border-border bg-surface p-2 shadow-md"
+                  >
+                    <div className="border-b border-border px-3 py-2">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {displayName}
+                      </p>
+                      {user?.email ? (
+                        <p className="truncate text-xs text-text-secondary">
+                          {user.email}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-1.5 space-y-0.5">
+                      {roleNavLinks.map((link) => {
+                        const active = pathname === link.href;
+                        return (
+                          <Link
+                            key={link.href}
+                            href={link.href}
+                            role="menuitem"
+                            onClick={closeAccountMenu}
+                            className={cn(
+                              "flex min-h-9 items-center rounded-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                              active
+                                ? "bg-secondary/70 font-semibold text-primary"
+                                : "text-foreground hover:bg-surface-subtle hover:text-primary"
+                            )}
+                          >
+                            {link.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
               <Button href={dashboardHref} variant="secondary" size="md">
                 <LayoutDashboard aria-hidden="true" className="size-4" />
                 <span>Dashboard</span>
@@ -99,10 +291,13 @@ export function Navbar({ auth = null }) {
               <Button
                 variant="outline"
                 size="md"
-                onClick={auth?.onLogout}
+                loading={isLoggingOut}
+                onClick={handleLogout}
               >
-                <LogOut aria-hidden="true" className="size-4" />
-                <span>Logout</span>
+                {!isLoggingOut ? (
+                  <LogOut aria-hidden="true" className="size-4" />
+                ) : null}
+                <span>{isLoggingOut ? "Signing out..." : "Logout"}</span>
               </Button>
             </>
           ) : (
@@ -154,6 +349,29 @@ export function Navbar({ auth = null }) {
             className="overflow-hidden border-t border-border bg-surface shadow-sm lg:hidden"
           >
             <Container className="py-5">
+              {isAuthenticated ? (
+                <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3.5 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <UserAvatar user={user} sizeClass="size-10" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {displayName}
+                      </p>
+                      {user?.email ? (
+                        <p className="truncate text-xs text-text-secondary">
+                          {user.email}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  {roleLabel ? (
+                    <Badge variant={roleBadgeVariant} size="sm">
+                      {roleLabel}
+                    </Badge>
+                  ) : null}
+                </div>
+              ) : null}
+
               <nav aria-label="Mobile navigation">
                 <ul className="flex flex-col gap-1">
                   {SITE_CONFIG.navLinks.map((item) => {
@@ -184,10 +402,41 @@ export function Navbar({ auth = null }) {
                     );
                   })}
                 </ul>
+
+                {isAuthenticated && roleNavLinks.length > 0 ? (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="px-3.5 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                      {roleLabel} Workspace
+                    </p>
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {roleNavLinks.map((link) => {
+                        const active = pathname === link.href;
+                        return (
+                          <li key={link.href}>
+                            <Link
+                              href={link.href}
+                              onClick={closeMenu}
+                              className={cn(
+                                "flex min-h-10 cursor-pointer items-center rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                active
+                                  ? "bg-secondary/70 font-semibold text-primary"
+                                  : "text-text-secondary hover:bg-surface-subtle hover:text-primary"
+                              )}
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
               </nav>
 
               <div className="mt-4 flex flex-col gap-2.5 border-t border-border pt-4">
-                {isAuthenticated ? (
+                {isSessionLoading ? (
+                  <Skeleton className="h-11 w-full rounded-lg" />
+                ) : isAuthenticated ? (
                   <>
                     <Button
                       href={dashboardHref}
@@ -203,13 +452,13 @@ export function Navbar({ auth = null }) {
                       variant="outline"
                       size="md"
                       fullWidth
-                      onClick={() => {
-                        closeMenu();
-                        auth?.onLogout?.();
-                      }}
+                      loading={isLoggingOut}
+                      onClick={handleLogout}
                     >
-                      <LogOut aria-hidden="true" className="size-4" />
-                      <span>Logout</span>
+                      {!isLoggingOut ? (
+                        <LogOut aria-hidden="true" className="size-4" />
+                      ) : null}
+                      <span>{isLoggingOut ? "Signing out..." : "Logout"}</span>
                     </Button>
                   </>
                 ) : (

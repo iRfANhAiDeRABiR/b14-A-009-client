@@ -1,3 +1,5 @@
+import { clearAccessTokenCache, getAccessToken } from "@/lib/token-provider";
+
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   /\/+$/,
   ""
@@ -30,7 +32,8 @@ export async function checkBookingAvailability({
   quantity,
   token,
 }) {
-  if (!token) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
     throw createAuthRequiredError("verify live equipment availability");
   }
   if (!API_BASE_URL) {
@@ -44,7 +47,7 @@ export async function checkBookingAvailability({
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${activeToken}`,
       },
       body: JSON.stringify({
         equipmentId,
@@ -56,6 +59,7 @@ export async function checkBookingAvailability({
   );
 
   if (response.status === 401 || response.status === 403) {
+    clearAccessTokenCache();
     throw createAuthRequiredError("verify equipment availability");
   }
 
@@ -84,7 +88,8 @@ export async function createBooking({
   additionalNotes = "",
   token,
 }) {
-  if (!token) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
     throw createAuthRequiredError("create a rental booking");
   }
   if (!API_BASE_URL) {
@@ -96,7 +101,7 @@ export async function createBooking({
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${activeToken}`,
     },
     body: JSON.stringify({
       equipmentId,
@@ -110,6 +115,7 @@ export async function createBooking({
   });
 
   if (response.status === 401 || response.status === 403) {
+    clearAccessTokenCache();
     throw createAuthRequiredError("create a rental booking");
   }
 

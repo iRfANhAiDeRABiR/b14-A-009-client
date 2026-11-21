@@ -188,7 +188,11 @@ export function BookingModal({
     setIsSubmitting(true);
 
     try {
-      if (!auth?.isAuthenticated || !auth?.token) {
+      const activeToken =
+        auth?.token ||
+        (typeof auth?.getToken === "function" ? await auth.getToken() : null);
+
+      if (!auth?.isAuthenticated || !activeToken) {
         const message =
           "Authentication required: please log in to check live availability and reserve equipment.";
         setSubmissionError(message);
@@ -206,7 +210,7 @@ export function BookingModal({
         startDate: formValues.startDate,
         endDate: formValues.endDate,
         quantity: Number(formValues.quantity),
-        token: auth.token,
+        token: activeToken,
       });
 
       if (availability && availability.available === false) {
@@ -230,7 +234,7 @@ export function BookingModal({
         contactNumber: formValues.contactNumber.trim(),
         deliveryAddress: formValues.deliveryAddress.trim(),
         additionalNotes: formValues.additionalNotes.trim(),
-        token: auth.token,
+        token: activeToken,
       });
 
       if (

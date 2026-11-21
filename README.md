@@ -12,6 +12,7 @@ GearNest is a modern equipment rental marketplace built with Next.js (App Router
 
 - **Framework:** Next.js 16 (App Router)
 - **Language:** JavaScript (React 19)
+- **Authentication:** Better Auth (`better-auth/react`, HTTP-only session cookies, JWT plugin, Google OAuth)
 - **Styling:** Tailwind CSS v4
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
@@ -25,18 +26,21 @@ src/
     layout.js        # Root layout, metadata, Google Fonts (Manrope & Inter)
     page.js          # Initial GearNest landing page
     globals.css      # Tailwind v4 setup and GearNest design tokens
+    login/           # Login page wrapped in Suspense
+    register/        # Registration page wrapped in Suspense
+    dashboard/       # Role-protected Customer, Owner, and Admin portal routes
   components/
+    auth/            # AuthLayout, LoginForm, RegisterForm, GoogleLoginButton, PasswordInput, ProtectedRoute
     equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
-    layout/          # Navbar, Footer, and MainLayout (with ToastProvider)
+    layout/          # Navbar, Footer, and MainLayout (with ToastProvider & AuthProvider)
     shared/          # BrandLogo and reusable placeholder pages
     ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton, ToastViewport)
-  context/           # React context providers (ToastContext)
+  context/           # React context providers (AuthProvider, ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
-  lib/               # Utilities, site configuration, auth integration boundary, and rental pricing calculator
-  hooks/             # Custom React hooks (useEquipment, useEquipmentDetails, useFavorites)
-  services/          # API client services (equipmentService, favoriteService, bookingService)
-  context/           # React context providers (future milestones)
+  lib/               # Utilities, site configuration, Better Auth client, JWT provider, validation, role navigation & pricing calculator
+  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites)
+  services/          # API client services (authService, equipmentService, favoriteService, bookingService)
 public/
   images/            # Curated local imagery
   icons/             # Brand mark and vector assets

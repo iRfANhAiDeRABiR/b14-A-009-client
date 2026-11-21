@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { getAuthState } from "@/lib/authBoundary";
 import { getEquipmentById } from "@/services/equipmentService";
 
-export function useEquipmentDetails(equipmentId) {
+export function useEquipmentDetails(
+  equipmentId,
+  { token = null, authLoading = false } = {}
+) {
   const [refreshTick, setRefreshTick] = React.useState(0);
-  const requestKey = `${equipmentId || ""}|${refreshTick}`;
+  const requestKey = `${equipmentId || ""}|${token ? "auth" : "anon"}|${refreshTick}`;
 
   const [state, setState] = React.useState({
     loadedKey: null,
@@ -14,21 +16,16 @@ export function useEquipmentDetails(equipmentId) {
     notFound: false,
     source: "demo",
     error: null,
-    auth: {
-      isAuthConfigured: false,
-      isAuthenticated: false,
-      user: null,
-      token: null,
-    },
   });
 
   React.useEffect(() => {
+    if (authLoading) return;
+
     let active = true;
 
     async function load() {
-      const auth = await getAuthState();
       const result = await getEquipmentById(equipmentId, {
-        token: auth.token,
+        token,
       });
 
       if (!active) return;
@@ -39,7 +36,6 @@ export function useEquipmentDetails(equipmentId) {
         notFound: result.notFound,
         source: result.source,
         error: result.error,
-        auth,
       });
     }
 
@@ -48,20 +44,16 @@ export function useEquipmentDetails(equipmentId) {
     return () => {
       active = false;
     };
-  }, [equipmentId, requestKey]);
+  }, [authLoading, equipmentId, requestKey, token]);
 
-  const loading = state.loadedKey !== requestKey;
+  const loading = authLoading || state.loadedKey !== requestKey;
 
   const retry = React.useCallback(() => {
-    setRefreshTick((tick) => tick + 1);
+    setRefreshTick((prev) => prev + 1);
   }, []);
 
   return {
-    item: state.item,
-    notFound: state.notFound,
-    source: state.source,
-    error: state.error,
-    auth: state.auth,
+    ...state,
     loading,
     retry,
   };
