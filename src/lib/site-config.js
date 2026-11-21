@@ -2,7 +2,7 @@ export const SITE_CONFIG = {
   name: "GearNest",
   tagline: "Precision Equipment, Ready on Demand.",
   description:
-    "Connect with verified local equipment owners to rent construction machinery, cinema optics, field vehicles, and event systems with transparent pricing and insured checkout.",
+    "Discover and rent quality equipment for construction, agriculture, photography and events. Get the right tools when you need them, without the cost of ownership.",
   navLinks: [
     { label: "Home", href: "/" },
     { label: "All Equipment", href: "/equipment" },
@@ -14,6 +14,44 @@ export const SITE_CONFIG = {
     login: { label: "Login", href: "/login" },
     register: { label: "Register", href: "/register" },
     dashboard: { label: "Dashboard", href: "/dashboard" },
+  },
+  hero: {
+    eyebrow: "THE SMARTER WAY TO RENT",
+    headlineTop: "Power Your Projects.",
+    headlineAccent: "Without Buying Equipment.",
+    description:
+      "Discover and rent quality equipment for construction, agriculture, photography and events. Get the right tools when you need them, without the cost of ownership.",
+    primaryCta: { label: "Explore Equipment", href: "/equipment" },
+    secondaryCta: { label: "List Your Equipment", href: "/register" },
+    trustIndicators: [
+      {
+        id: "flexible-rental-periods",
+        title: "Flexible Rental Periods",
+        subtitle: "Daily, weekly, and monthly booking options",
+      },
+      {
+        id: "trusted-equipment-owners",
+        title: "Trusted Equipment Owners",
+        subtitle: "Verified fleet profiles and transparent terms",
+      },
+      {
+        id: "transparent-pricing",
+        title: "Transparent Pricing",
+        subtitle: "Upfront rates with zero hidden fees",
+      },
+    ],
+    visual: {
+      imageSrc: "/images/hero-excavator.jpg",
+      imageAlt:
+        "Commercial hydraulic construction excavator positioned at an active daylight job site",
+      availabilityLabel: "Available Now",
+      cardCategory: "Construction Machinery",
+      cardTitle: "Hydraulic Site Excavator",
+      cardRate: "$285",
+      cardUnit: "/ day",
+      cardMeta: "Daily · Weekly · Monthly",
+      cardLocation: "Verified Fleet Ready",
+    },
   },
   footerColumns: [
     {
@@ -44,40 +82,6 @@ export const SITE_CONFIG = {
         { label: "Terms & Conditions", href: "/terms" },
         { label: "Privacy Policy", href: "/privacy" },
       ],
-    },
-  ],
-  equipmentHighlights: [
-    {
-      label: "Cinema & Optics",
-      rate: "From $95 / day",
-      location: "Verified Studio Fleet",
-    },
-    {
-      label: "Site & Power Tools",
-      rate: "From $48 / day",
-      location: "Inspected Before Dispatch",
-    },
-    {
-      label: "Field Lighting & Rigging",
-      rate: "From $65 / day",
-      location: "Flexible Daily & Weekly Terms",
-    },
-  ],
-  marketplacePillars: [
-    {
-      title: "Verified Local Fleet",
-      description:
-        "Every listing passes owner verification and spec review before appearing on the marketplace.",
-    },
-    {
-      title: "Flexible Rental Windows",
-      description:
-        "Book equipment by the day, week, or month with transparent availability and quantity checks.",
-    },
-    {
-      title: "Protected Checkout",
-      description:
-        "Confirm rental dates in seconds and complete transactions securely through Stripe Checkout.",
     },
   ],
 };
