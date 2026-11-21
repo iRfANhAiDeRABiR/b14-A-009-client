@@ -4,7 +4,12 @@ import * as React from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
-import { getCustomerDashboard } from "@/services/customerService";
+import { useFavorites } from "@/hooks/useFavorites";
+import {
+  aggregateMonthlyRentals,
+  computeCustomerStats,
+} from "@/lib/customerUtils";
+import { getMyBookings } from "@/services/bookingService";
 import { CustomerStats } from "@/components/customer/CustomerStats";
 import { FavoritePreview } from "@/components/customer/FavoritePreview";
 import { MonthlyRentalChart } from "@/components/customer/MonthlyRentalChart";
@@ -13,21 +18,22 @@ import { Button } from "@/components/ui/Button";
 
 export function CustomerOverview() {
   const { user, token, isLoading: isAuthLoading, isAuthenticated } = useAuth();
-  const [refreshTick, setRefreshTick] = React.useState(0);
+  const {
+    favorites,
+    favoritesCount,
+    isLoading: favoritesLoading,
+    errorMessage: favoritesError,
+    refreshFavorites,
+  } = useFavorites();
 
+  const [refreshTick, setRefreshTick] = React.useState(0);
   const requestKey = `${user?.id || user?.email || "customer"}|${refreshTick}`;
 
-  const [state, setState] = React.useState({
+  const [rentalState, setRentalState] = React.useState({
     loadedKey: "",
-    stats: {
-      totalRentals: 0,
-      activeRentals: 0,
-      completedRentals: 0,
-      favoriteCount: 0,
-    },
-    monthlyActivity: [],
-    recentRentals: [],
-    favoritePreview: [],
+    rentals: [],
+    summary: null,
+    monthlyAnalytics: null,
     error: null,
   });
 
@@ -36,28 +42,29 @@ export function CustomerOverview() {
 
     let active = true;
 
-    getCustomerDashboard({ token })
+    getMyBookings({ limit: 50, token })
       .then((result) => {
         if (!active) return;
-        setState({
+        setRentalState({
           loadedKey: requestKey,
-          stats: result.stats,
-          monthlyActivity: result.monthlyActivity,
-          recentRentals: result.recentRentals,
-          favoritePreview: result.favoritePreview,
-          error: result.error,
+          rentals: result.items || [],
+          summary: result.summary || null,
+          monthlyAnalytics: result.monthlyAnalytics || null,
+          error: null,
         });
       })
       .catch((error) => {
         if (!active) return;
-        setState((prev) => ({
-          ...prev,
+        setRentalState({
           loadedKey: requestKey,
+          rentals: [],
+          summary: null,
+          monthlyAnalytics: null,
           error:
             error instanceof Error
               ? error.message
-              : "Unable to load customer dashboard overview.",
-        }));
+              : "Unable to load rental bookings.",
+        });
       });
 
     return () => {
@@ -65,11 +72,56 @@ export function CustomerOverview() {
     };
   }, [isAuthLoading, isAuthenticated, requestKey, token]);
 
-  const loading = isAuthLoading || state.loadedKey !== requestKey;
+  const rentalsLoading = isAuthLoading || rentalState.loadedKey !== requestKey;
+  const loading = rentalsLoading || favoritesLoading;
+
+  const stats = React.useMemo(
+    () =>
+      computeCustomerStats(
+        rentalState.rentals,
+        favoritesCount,
+        rentalState.summary
+      ),
+    [favoritesCount, rentalState.rentals, rentalState.summary]
+  );
+
+  const monthlyActivity = React.useMemo(
+    () =>
+      aggregateMonthlyRentals(
+        rentalState.rentals,
+        rentalState.monthlyAnalytics
+      ),
+    [rentalState.monthlyAnalytics, rentalState.rentals]
+  );
+
+  const recentRentals = React.useMemo(
+    () =>
+      [...rentalState.rentals]
+        .sort((a, b) =>
+          String(b.createdAt || b.startDate).localeCompare(
+            String(a.createdAt || a.startDate)
+          )
+        )
+        .slice(0, 5),
+    [rentalState.rentals]
+  );
+
+  const favoritePreview = React.useMemo(
+    () => favorites.slice(0, 4),
+    [favorites]
+  );
+
+  const combinedError = rentalState.error || favoritesError || null;
+
   const firstName =
     typeof user?.name === "string" && user.name.trim()
       ? user.name.trim().split(/\s+/)[0]
       : "";
+
+  const handleRefreshAll = () => {
+    setRefreshTick((prev) => prev + 1);
+    refreshFavorites().catch(() => null);
+  };
 
   return (
     <div className="space-y-6">
@@ -87,14 +139,14 @@ export function CustomerOverview() {
           variant="outline"
           size="sm"
           disabled={loading}
-          onClick={() => setRefreshTick((prev) => prev + 1)}
+          onClick={handleRefreshAll}
         >
           <RefreshCw aria-hidden="true" className="size-3.5" />
           <span>Refresh Data</span>
         </Button>
       </header>
 
-      {state.error && !loading ? (
+      {combinedError && !loading ? (
         <div
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-border bg-warning-bg px-4 py-3 text-sm text-warning"
@@ -102,27 +154,26 @@ export function CustomerOverview() {
           <div className="flex items-start gap-2.5">
             <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
             <span>
-              {state.error} Displaying verified empty state until customer API endpoints connect.
+              {combinedError} Displaying verified empty state until customer API endpoints connect.
             </span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setRefreshTick((prev) => prev + 1)}
-          >
+          <Button variant="outline" size="sm" onClick={handleRefreshAll}>
             <RefreshCw aria-hidden="true" className="size-3.5" />
             <span>Retry</span>
           </Button>
         </div>
       ) : null}
 
-      <CustomerStats stats={state.stats} loading={loading} />
+      <CustomerStats stats={stats} loading={loading} />
 
-      <MonthlyRentalChart data={state.monthlyActivity} loading={loading} />
+      <MonthlyRentalChart data={monthlyActivity} loading={rentalsLoading} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <RecentRentals rentals={state.recentRentals} loading={loading} />
-        <FavoritePreview favorites={state.favoritePreview} loading={loading} />
+        <RecentRentals rentals={recentRentals} loading={rentalsLoading} />
+        <FavoritePreview
+          favorites={favoritePreview}
+          loading={favoritesLoading}
+        />
       </div>
     </div>
   );

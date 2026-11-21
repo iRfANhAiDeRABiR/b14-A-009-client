@@ -90,18 +90,19 @@ export function EquipmentDetails({ equipmentId }) {
       authLoading: auth.isLoading || !auth.isAuthenticated,
     });
 
+  const currentPath = `/equipment/${encodeURIComponent(equipmentId || "")}`;
+  const loginRedirectUrl = buildLoginRedirectUrl(currentPath);
+
   const {
     isFavorite,
     isLoading: favoriteLoading,
+    isNonCustomerRole,
     errorMessage: favoriteError,
     toggleFavorite,
   } = useFavorites({
     equipmentId: item?._id || equipmentId,
-    token: auth.token,
+    redirectPath: currentPath,
   });
-
-  const currentPath = `/equipment/${encodeURIComponent(equipmentId || "")}`;
-  const loginRedirectUrl = buildLoginRedirectUrl(currentPath);
 
   React.useEffect(() => {
     if (!auth.isLoading && !auth.isAuthenticated) {
@@ -321,6 +322,12 @@ export function EquipmentDetails({ equipmentId }) {
                   <FavoriteButton
                     isFavorite={isFavorite}
                     isLoading={favoriteLoading}
+                    disabled={isNonCustomerRole}
+                    helperText={
+                      isNonCustomerRole
+                        ? "Favorites are only available to Customer accounts."
+                        : ""
+                    }
                     errorMessage={favoriteError}
                     onClick={toggleFavorite}
                   />

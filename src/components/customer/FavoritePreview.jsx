@@ -3,6 +3,7 @@
 import { ArrowRight, ExternalLink, Heart } from "lucide-react";
 
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -65,7 +66,7 @@ export function FavoritePreview({ favorites = [], loading = false }) {
               No Favorites Yet
             </h3>
             <p className="mt-1 max-w-xs text-xs leading-relaxed text-text-secondary">
-              Save equipment you like and find it here whenever you need it.
+              Start exploring GearNest and save equipment you may need for your next project.
             </p>
             <Button href="/equipment" variant="primary" size="sm" className="mt-4">
               Explore Equipment
@@ -73,46 +74,72 @@ export function FavoritePreview({ favorites = [], loading = false }) {
           </div>
         ) : (
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {favorites.map((item) => (
-              <div
-                key={item.equipmentId}
-                className="flex flex-col justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-primary/30"
-              >
-                <div className="flex items-start gap-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.image || "/images/hero-equipment.jpg"}
-                    alt={item.name}
-                    className="size-16 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate font-heading text-sm font-semibold text-foreground">
-                      {item.name}
-                    </p>
-                    <p className="mt-0.5 text-xs text-text-secondary">
-                      {item.category}
-                    </p>
-                    <p className="mt-1.5 font-heading text-sm font-bold text-primary tabular-nums">
-                      {formatCurrencyBDT(item.rentalPrice)}
-                      <span className="ml-1 text-xs font-normal text-text-secondary">
-                        / {item.rentalType}
-                      </span>
-                    </p>
-                  </div>
-                </div>
+            {favorites.map((item) => {
+              const unavailable = item.isDeletedRecord || !item.isPubliclyApproved;
 
-                <Button
-                  href={`/equipment/${encodeURIComponent(item.equipmentId)}`}
-                  variant="outline"
-                  size="sm"
-                  fullWidth
-                  className="mt-3"
+              return (
+                <div
+                  key={item.equipmentId}
+                  className="flex flex-col justify-between rounded-xl border border-border bg-background p-3.5 transition-colors hover:border-primary/30"
                 >
-                  <span>View Details</span>
-                  <ExternalLink aria-hidden="true" className="size-3.5" />
-                </Button>
-              </div>
-            ))}
+                  <div className="flex items-start gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.image || "/images/hero-equipment.jpg"}
+                      alt={item.name}
+                      className="size-16 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate font-heading text-sm font-semibold text-foreground">
+                        {item.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-secondary">
+                        {item.category}
+                      </p>
+                      {item.rentalPrice !== null ? (
+                        <p className="mt-1.5 font-heading text-sm font-bold text-primary tabular-nums">
+                          {formatCurrencyBDT(item.rentalPrice)}
+                          {item.rentalType ? (
+                            <span className="ml-1 text-xs font-normal text-text-secondary">
+                              / {item.rentalType}
+                            </span>
+                          ) : null}
+                        </p>
+                      ) : (
+                        <div className="mt-1.5">
+                          <Badge variant={item.availabilityVariant} size="sm">
+                            {item.availabilityStatus}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {!unavailable ? (
+                    <Button
+                      href={`/equipment/${encodeURIComponent(item.equipmentId)}`}
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      className="mt-3"
+                    >
+                      <span>View Details</span>
+                      <ExternalLink aria-hidden="true" className="size-3.5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      href="/dashboard/customer/favorites"
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      className="mt-3"
+                    >
+                      <span>Manage Listing</span>
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

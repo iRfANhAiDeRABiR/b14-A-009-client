@@ -55,6 +55,12 @@ export const PAYMENT_FILTER_OPTIONS = [
 
 export const DEFAULT_BOOKINGS_LIMIT = 10;
 
+export const FAVORITE_SORT_OPTIONS = [
+  { label: "Recently Added", value: "recent" },
+  { label: "Rental Price: Low to High", value: "price_asc" },
+  { label: "Rental Price: High to Low", value: "price_desc" },
+];
+
 export function formatDisplayDate(rawDate) {
   if (!rawDate) return "—";
   const str = String(rawDate).trim();
@@ -268,42 +274,172 @@ export function normalizeCustomerRental(raw) {
 export function normalizeFavoriteEquipment(raw) {
   if (!raw || typeof raw !== "object") return null;
 
-  const item =
-    raw.equipment && typeof raw.equipment === "object" ? raw.equipment : raw;
+  const hasNestedEquipment = Object.prototype.hasOwnProperty.call(
+    raw,
+    "equipment"
+  );
+  const nestedEquipment =
+    hasNestedEquipment && raw.equipment && typeof raw.equipment === "object"
+      ? raw.equipment
+      : null;
+
+  // Handle deleted or orphaned favorite records where backend populated equipment as null/deleted.
+  const isExplicitlyDeleted = Boolean(
+    raw.isDeleted ||
+      raw.equipmentDeleted ||
+      (hasNestedEquipment && raw.equipment === null)
+  );
+
+  const item = nestedEquipment || raw;
   const equipmentId =
-    item._id || item.id || raw.equipmentId || raw._id || "";
+    nestedEquipment?._id ||
+    nestedEquipment?.id ||
+    raw.equipmentId ||
+    item._id ||
+    item.id ||
+    "";
 
   if (!equipmentId) return null;
+
+  const hasEquipmentName = Boolean(
+    typeof item.name === "string" && item.name.trim()
+  );
+  const isDeletedRecord = isExplicitlyDeleted || !hasEquipmentName;
+
+  const approvalStatus = String(item.status || "")
+    .trim()
+    .toLowerCase();
+  const hasExplicitNonApprovedStatus = Boolean(
+    approvalStatus && approvalStatus !== "approved"
+  );
 
   const availableQuantity =
     typeof item.availableQuantity === "number"
       ? item.availableQuantity
-      : Number(item.availableQuantity);
+      : item.availableQuantity !== undefined && item.availableQuantity !== null
+        ? Number(item.availableQuantity)
+        : NaN;
 
   const hasNumericStock = Number.isFinite(availableQuantity);
-  const derivedAvailability =
-    item.availabilityStatus ||
-    (hasNumericStock
-      ? availableQuantity > 0
-        ? "Available"
-        : "Unavailable"
-      : "Unknown");
+  const rawAvailability = String(item.availabilityStatus || "").trim();
+  const normalizedAvailability = rawAvailability.toLowerCase();
+
+  let availabilityStatus = "Available";
+  let availabilityVariant = "success";
+  let isRentable = true;
+
+  if (isDeletedRecord) {
+    availabilityStatus = "Unavailable (Removed)";
+    availabilityVariant = "neutral";
+    isRentable = false;
+  } else if (hasExplicitNonApprovedStatus) {
+    availabilityStatus = "Unavailable";
+    availabilityVariant = "warning";
+    isRentable = false;
+  } else if (hasNumericStock && availableQuantity <= 0) {
+    availabilityStatus = "Unavailable";
+    availabilityVariant = "warning";
+    isRentable = false;
+  } else if (normalizedAvailability.includes("unavailable")) {
+    availabilityStatus = rawAvailability || "Unavailable";
+    availabilityVariant = "warning";
+    isRentable = false;
+  } else if (normalizedAvailability.includes("limited")) {
+    availabilityStatus = rawAvailability || "Limited Stock";
+    availabilityVariant = "warning";
+    isRentable = true;
+  } else if (rawAvailability) {
+    availabilityStatus = rawAvailability;
+    availabilityVariant = "success";
+    isRentable = true;
+  }
 
   return {
     favoriteId: String(raw._id || raw.id || equipmentId),
     equipmentId: String(equipmentId),
-    name: item.name || "Saved Equipment",
+    name: hasEquipmentName ? item.name.trim() : "Equipment No Longer Listed",
     image:
       item.image ||
       (Array.isArray(item.images) ? item.images[0] : "") ||
       "/images/hero-equipment.jpg",
-    category: item.category || "Equipment",
-    rentalPrice: Number(item.rentalPrice ?? 0) || 0,
-    rentalType: item.rentalType || "Daily",
-    location: item.location || "Bangladesh",
+    category: item.category || (isDeletedRecord ? "Removed Listing" : "Equipment"),
+    rentalPrice:
+      item.rentalPrice !== undefined &&
+      item.rentalPrice !== null &&
+      Number.isFinite(Number(item.rentalPrice))
+        ? Number(item.rentalPrice)
+        : null,
+    rentalType: item.rentalType || "",
+    location: item.location || "",
     availableQuantity: hasNumericStock ? availableQuantity : null,
-    availabilityStatus: derivedAvailability,
+    approvalStatus,
+    isDeletedRecord,
+    isPubliclyApproved: !isDeletedRecord && !hasExplicitNonApprovedStatus,
+    isRentable,
+    availabilityStatus,
+    availabilityVariant,
+    addedAt: raw.createdAt || raw.addedAt || "",
   };
+}
+
+export function computeFavoriteStats(favorites = []) {
+  const safeList = Array.isArray(favorites) ? favorites : [];
+  const total = safeList.length;
+  const available = safeList.filter((item) => Boolean(item?.isRentable)).length;
+  const unavailable = total - available;
+
+  return {
+    total,
+    available,
+    unavailable,
+  };
+}
+
+export function filterAndSortFavorites(
+  favorites = [],
+  { search = "", category = "all", sort = "recent" } = {}
+) {
+  const safeList = Array.isArray(favorites) ? [...favorites] : [];
+  const searchLower = String(search || "").trim().toLowerCase();
+  const categoryLower = String(category || "all").trim().toLowerCase();
+
+  let filtered = safeList.filter((item) => {
+    if (categoryLower && categoryLower !== "all") {
+      if (String(item.category || "").trim().toLowerCase() !== categoryLower) {
+        return false;
+      }
+    }
+
+    if (searchLower) {
+      const hay = `${item.name || ""} ${item.location || ""} ${
+        item.category || ""
+      }`.toLowerCase();
+      if (!hay.includes(searchLower)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  if (sort === "price_asc") {
+    filtered.sort(
+      (a, b) => (Number(a.rentalPrice) || 0) - (Number(b.rentalPrice) || 0)
+    );
+  } else if (sort === "price_desc") {
+    filtered.sort(
+      (a, b) => (Number(b.rentalPrice) || 0) - (Number(a.rentalPrice) || 0)
+    );
+  } else if (sort === "recent") {
+    filtered.sort((a, b) => {
+      if (a.addedAt && b.addedAt) {
+        return String(b.addedAt).localeCompare(String(a.addedAt));
+      }
+      return 0;
+    });
+  }
+
+  return filtered;
 }
 
 export function computeCustomerStats(

@@ -1,9 +1,9 @@
 import { FavoritesTable } from "@/components/customer/FavoritesTable";
 
 export const metadata = {
-  title: "My Favorites",
+  title: "My Favorite Equipment",
   description:
-    "Your saved equipment, availability status, and quick booking links in one place.",
+    "Keep your preferred equipment close and find it whenever your next project needs it.",
 };
 
 export default function CustomerFavoritesPage() {
