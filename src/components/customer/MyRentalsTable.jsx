@@ -1,25 +1,25 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
+  Calendar,
   ClipboardList,
-  ExternalLink,
+  Eye,
   RefreshCw,
 } from "lucide-react";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useMyBookings } from "@/hooks/useMyBookings";
 import {
+  formatBookingDuration,
   formatDisplayDate,
   getBookingStatusBadge,
   getPaymentStatusBadge,
 } from "@/lib/customerUtils";
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
-import { getMyRentals } from "@/services/bookingService";
-import { RentalFilters } from "@/components/customer/RentalFilters";
+import { BookingDetailsModal } from "@/components/customer/BookingDetailsModal";
+import { BookingHistoryFilters } from "@/components/customer/BookingHistoryFilters";
+import { BookingHistoryPagination } from "@/components/customer/BookingHistoryPagination";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -46,82 +46,28 @@ function RentalsTableSkeleton() {
 }
 
 export function MyRentalsTable() {
-  const { token, isLoading: isAuthLoading, isAuthenticated } = useAuth();
-  const [statusFilter, setStatusFilter] = React.useState("all");
-  const [page, setPage] = React.useState(1);
-  const [refreshTick, setRefreshTick] = React.useState(0);
+  const {
+    filters,
+    items,
+    pagination,
+    error,
+    loading,
+    hasActiveFilters,
+    updateFilters,
+    clearFilters,
+    setPage,
+    retry,
+  } = useMyBookings();
 
-  const requestKey = `${statusFilter}|${page}|${refreshTick}`;
-
-  const [state, setState] = React.useState({
-    loadedKey: "",
-    items: [],
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-    },
-    error: null,
-  });
-
-  React.useEffect(() => {
-    if (isAuthLoading || !isAuthenticated) return undefined;
-
-    let active = true;
-
-    getMyRentals({
-      status: statusFilter,
-      page,
-      limit: 10,
-      token,
-    })
-      .then((result) => {
-        if (!active) return;
-        setState({
-          loadedKey: requestKey,
-          items: result.items || [],
-          pagination: result.pagination || {
-            page,
-            limit: 10,
-            total: (result.items || []).length,
-            totalPages: 1,
-          },
-          error: null,
-        });
-      })
-      .catch((error) => {
-        if (!active) return;
-        setState((prev) => ({
-          ...prev,
-          loadedKey: requestKey,
-          items: [],
-          error:
-            error instanceof Error
-              ? error.message
-              : "Unable to load your rental bookings.",
-        }));
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [isAuthLoading, isAuthenticated, page, requestKey, statusFilter, token]);
-
-  const loading = isAuthLoading || state.loadedKey !== requestKey;
-
-  const handleSelectFilter = (nextStatus) => {
-    setStatusFilter(nextStatus);
-    setPage(1);
-  };
+  const [selectedBooking, setSelectedBooking] = React.useState(null);
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="type-page-title text-foreground">My Rentals</h1>
+          <h1 className="type-page-title text-foreground">My Rental History</h1>
           <p className="mt-1.5 text-sm leading-relaxed text-text-secondary sm:text-base">
-            Track and manage all your equipment rental bookings.
+            Keep track of your equipment bookings, rental periods and payment information.
           </p>
         </div>
 
@@ -130,7 +76,7 @@ export function MyRentalsTable() {
             variant="outline"
             size="sm"
             disabled={loading}
-            onClick={() => setRefreshTick((prev) => prev + 1)}
+            onClick={retry}
           >
             <RefreshCw aria-hidden="true" className="size-3.5" />
             <span>Refresh</span>
@@ -141,26 +87,24 @@ export function MyRentalsTable() {
         </div>
       </header>
 
-      <RentalFilters
-        selectedStatus={statusFilter}
-        onSelectStatus={handleSelectFilter}
+      <BookingHistoryFilters
+        filters={filters}
+        onUpdateFilters={updateFilters}
+        onClearFilters={clearFilters}
+        hasActiveFilters={hasActiveFilters}
         disabled={loading}
       />
 
-      {state.error && !loading ? (
+      {error && !loading ? (
         <div
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning-border bg-warning-bg px-4 py-3 text-sm text-warning"
         >
           <div className="flex items-start gap-2.5">
             <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-            <span>{state.error}</span>
+            <span>{error}</span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setRefreshTick((prev) => prev + 1)}
-          >
+          <Button variant="outline" size="sm" onClick={retry}>
             <RefreshCw aria-hidden="true" className="size-3.5" />
             <span>Retry</span>
           </Button>
@@ -169,7 +113,7 @@ export function MyRentalsTable() {
 
       {loading ? (
         <RentalsTableSkeleton />
-      ) : state.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <Card padding="lg" className="rounded-2xl text-center">
           <span
             aria-hidden="true"
@@ -177,24 +121,23 @@ export function MyRentalsTable() {
           >
             <ClipboardList className="size-7" />
           </span>
-          <h2 className="mt-4 font-heading text-lg font-semibold text-foreground">
-            {statusFilter === "all"
-              ? "No rentals recorded yet"
-              : `No ${statusFilter} bookings found`}
+
+          <h2 className="mt-4 font-heading text-xl font-bold text-foreground">
+            {hasActiveFilters
+              ? "No bookings match your selected filters."
+              : "No Rental History Yet"}
           </h2>
-          <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-text-secondary">
-            {statusFilter === "all"
-              ? "When you reserve equipment from GearNest, your payment and rental status updates will appear here."
-              : "Try switching back to All Bookings or browse available equipment for a new rental."}
+
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
+            {hasActiveFilters
+              ? "Adjust your booking status, payment status, or search keyword to view other reservations."
+              : "Your equipment bookings will appear here once you make your first reservation."}
           </p>
+
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {statusFilter !== "all" ? (
-              <Button
-                variant="outline"
-                size="md"
-                onClick={() => handleSelectFilter("all")}
-              >
-                Show All Bookings
+            {hasActiveFilters ? (
+              <Button variant="outline" size="md" onClick={clearFilters}>
+                Clear Filters
               </Button>
             ) : null}
             <Button href="/equipment" variant="primary" size="md">
@@ -203,167 +146,256 @@ export function MyRentalsTable() {
           </div>
         </Card>
       ) : (
-        <Card padding="none" className="overflow-hidden rounded-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-border bg-background text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                  <th scope="col" className="px-5 py-3.5">
-                    Equipment Name
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Rental Start Date
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Rental End Date
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Booking Date
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Total Amount
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Payment Status
-                  </th>
-                  <th scope="col" className="px-4 py-3.5">
-                    Booking Status
-                  </th>
-                  <th scope="col" className="px-5 py-3.5 text-right">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-surface">
-                {state.items.map((rental) => {
-                  const paymentBadge = getPaymentStatusBadge(
-                    rental.paymentStatus
-                  );
-                  const bookingBadge = getBookingStatusBadge(
-                    rental.bookingStatus
-                  );
-                  const detailsHref = rental.equipment?._id
-                    ? `/equipment/${encodeURIComponent(rental.equipment._id)}`
-                    : "";
+        <div className="space-y-4">
+          {/* Desktop / Tablet Data Table */}
+          <Card padding="none" className="hidden overflow-hidden rounded-2xl md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[820px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-background text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                    <th scope="col" className="px-5 py-3.5">
+                      Equipment Name
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Rental Start Date
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Rental End Date
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Booking Date
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Total Amount
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Payment Status
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Booking Status
+                    </th>
+                    <th scope="col" className="px-5 py-3.5 text-right">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-surface">
+                  {items.map((rental) => {
+                    const paymentBadge = getPaymentStatusBadge(
+                      rental.paymentStatus
+                    );
+                    const bookingBadge = getBookingStatusBadge(
+                      rental.bookingStatus
+                    );
+                    const duration = formatBookingDuration(
+                      rental.startDate,
+                      rental.endDate,
+                      rental.durationDays
+                    );
 
-                  return (
-                    <tr
-                      key={
-                        rental._id ||
-                        `${rental.equipment?.name}-${rental.startDate}`
-                      }
-                      className="transition-colors hover:bg-surface-subtle/70"
-                    >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={
-                              rental.equipment?.image ||
-                              "/images/hero-equipment.jpg"
-                            }
-                            alt={rental.equipment?.name || "Equipment"}
-                            className="size-11 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
-                          />
-                          <div className="min-w-0">
-                            <p className="font-heading font-semibold text-foreground">
-                              {rental.equipment?.name}
-                            </p>
-                            {rental.equipment?.category ? (
-                              <p className="text-xs text-text-secondary">
-                                {rental.equipment.category}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
-                        {formatDisplayDate(rental.startDate)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
-                        {formatDisplayDate(rental.endDate)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
-                        {formatDisplayDate(rental.createdAt)}
-                      </td>
-                      <td className="px-4 py-4 font-heading font-semibold whitespace-nowrap text-primary tabular-nums">
-                        {formatCurrencyBDT(rental.totalAmount)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <Badge variant={paymentBadge.variant} size="sm">
-                          {paymentBadge.label}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <Badge variant={bookingBadge.variant} dot size="sm">
-                          {bookingBadge.label}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-4 text-right whitespace-nowrap">
-                        {detailsHref ? (
-                          <Link
-                            href={detailsHref}
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-surface-subtle hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          >
-                            <span>View Details</span>
-                            <ExternalLink
-                              aria-hidden="true"
-                              className="size-3.5"
+                    return (
+                      <tr
+                        key={
+                          rental._id ||
+                          `${rental.equipment?.name}-${rental.startDate}`
+                        }
+                        className="transition-colors hover:bg-surface-subtle/70"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={
+                                rental.equipment?.image ||
+                                "/images/hero-equipment.jpg"
+                              }
+                              alt={rental.equipment?.name || "Equipment"}
+                              className="size-11 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
                             />
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-muted">Unavailable</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {state.pagination.totalPages > 1 ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background px-5 py-3 text-xs text-text-secondary">
-              <span>
-                Page{" "}
-                <strong className="font-semibold text-foreground">
-                  {state.pagination.page}
-                </strong>{" "}
-                of{" "}
-                <strong className="font-semibold text-foreground">
-                  {state.pagination.totalPages}
-                </strong>{" "}
-                ({state.pagination.total} bookings)
-              </span>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft aria-hidden="true" className="size-4" />
-                  <span>Previous</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= state.pagination.totalPages}
-                  onClick={() =>
-                    setPage((p) =>
-                      Math.min(state.pagination.totalPages, p + 1)
-                    )
-                  }
-                >
-                  <span>Next</span>
-                  <ChevronRight aria-hidden="true" className="size-4" />
-                </Button>
-              </div>
+                            <div className="min-w-0">
+                              <p className="font-heading font-semibold text-foreground">
+                                {rental.equipment?.name}
+                              </p>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+                                {rental.equipment?.category ? (
+                                  <span>{rental.equipment.category}</span>
+                                ) : null}
+                                {rental.bookingReference ? (
+                                  <span className="font-mono text-[11px] text-muted">
+                                    #{rental.bookingReference}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
+                          {formatDisplayDate(rental.startDate)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
+                          <div>{formatDisplayDate(rental.endDate)}</div>
+                          {duration !== "—" ? (
+                            <div className="text-[11px] text-muted">
+                              {duration}
+                            </div>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
+                          {formatDisplayDate(rental.createdAt)}
+                        </td>
+                        <td className="px-4 py-4 font-heading font-semibold whitespace-nowrap text-primary tabular-nums">
+                          {formatCurrencyBDT(rental.totalAmount)}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <Badge variant={paymentBadge.variant} size="sm">
+                            {paymentBadge.label}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <Badge variant={bookingBadge.variant} dot size="sm">
+                            {bookingBadge.label}
+                          </Badge>
+                        </td>
+                        <td className="px-5 py-4 text-right whitespace-nowrap">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedBooking(rental)}
+                            aria-label={`View booking details for ${rental.equipment?.name}`}
+                          >
+                            <Eye aria-hidden="true" className="size-3.5" />
+                            <span>View Details</span>
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          ) : null}
-        </Card>
+
+            <BookingHistoryPagination
+              pagination={pagination}
+              onPageChange={setPage}
+            />
+          </Card>
+
+          {/* Mobile Stacked Cards */}
+          <div className="space-y-3 md:hidden">
+            {items.map((rental) => {
+              const paymentBadge = getPaymentStatusBadge(rental.paymentStatus);
+              const bookingBadge = getBookingStatusBadge(rental.bookingStatus);
+              const duration = formatBookingDuration(
+                rental.startDate,
+                rental.endDate,
+                rental.durationDays
+              );
+
+              return (
+                <Card
+                  key={
+                    rental._id ||
+                    `${rental.equipment?.name}-${rental.startDate}-mobile`
+                  }
+                  padding="md"
+                  className="space-y-3.5 rounded-2xl"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={
+                          rental.equipment?.image ||
+                          "/images/hero-equipment.jpg"
+                        }
+                        alt={rental.equipment?.name || "Equipment"}
+                        className="size-12 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-heading text-sm font-bold text-foreground">
+                          {rental.equipment?.name}
+                        </p>
+                        {rental.equipment?.category ? (
+                          <p className="text-xs text-text-secondary">
+                            {rental.equipment.category}
+                          </p>
+                        ) : null}
+                        {rental.bookingReference ? (
+                          <p className="font-mono text-[11px] text-muted">
+                            #{rental.bookingReference}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <span className="shrink-0 font-heading text-base font-bold text-primary tabular-nums">
+                      {formatCurrencyBDT(rental.totalAmount)}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-background p-3 text-xs">
+                    <div>
+                      <p className="text-muted">Rental Period</p>
+                      <p className="mt-0.5 flex items-center gap-1 font-medium text-foreground">
+                        <Calendar aria-hidden="true" className="size-3 text-primary" />
+                        <span>
+                          {formatDisplayDate(rental.startDate)} –{" "}
+                          {formatDisplayDate(rental.endDate)}
+                        </span>
+                      </p>
+                      {duration !== "—" ? (
+                        <p className="text-[11px] text-text-secondary">
+                          Duration: {duration}
+                        </p>
+                      ) : null}
+                    </div>
+                    <div>
+                      <p className="text-muted">Booked On</p>
+                      <p className="mt-0.5 font-medium text-foreground">
+                        {formatDisplayDate(rental.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={paymentBadge.variant} size="sm">
+                        {paymentBadge.label}
+                      </Badge>
+                      <Badge variant={bookingBadge.variant} dot size="sm">
+                        {bookingBadge.label}
+                      </Badge>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedBooking(rental)}
+                    >
+                      <Eye aria-hidden="true" className="size-3.5" />
+                      <span>View Details</span>
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+
+            {pagination.totalPages > 1 ? (
+              <Card padding="none" className="overflow-hidden rounded-2xl">
+                <BookingHistoryPagination
+                  pagination={pagination}
+                  onPageChange={setPage}
+                />
+              </Card>
+            ) : null}
+          </div>
+        </div>
       )}
+
+      <BookingDetailsModal
+        booking={selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+      />
     </div>
   );
 }

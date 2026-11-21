@@ -4,7 +4,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
-export function EquipmentPagination({ pagination, onPageChange }) {
+export function EquipmentPagination({
+  pagination,
+  onPageChange,
+  itemLabel = "equipment items",
+  ariaLabel = "Equipment pagination",
+  className = "mt-10 border-t border-border pt-6",
+}) {
   const currentPage = pagination?.currentPage || 1;
   const totalPages = pagination?.totalPages || 0;
   const totalItems = pagination?.totalItems || 0;
@@ -18,8 +24,11 @@ export function EquipmentPagination({ pagination, onPageChange }) {
 
   return (
     <nav
-      aria-label="Equipment pagination"
-      className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-border pt-6 sm:flex-row"
+      aria-label={ariaLabel}
+      className={cn(
+        "flex flex-col items-center justify-between gap-4 sm:flex-row",
+        className
+      )}
     >
       <p className="text-sm text-text-secondary">
         Showing{" "}
@@ -30,7 +39,7 @@ export function EquipmentPagination({ pagination, onPageChange }) {
         <span className="font-semibold text-foreground tabular-nums">
           {totalItems}
         </span>{" "}
-        equipment items &middot; Page{" "}
+        {itemLabel} &middot; Page{" "}
         <span className="font-semibold text-foreground tabular-nums">
           {currentPage}
         </span>{" "}

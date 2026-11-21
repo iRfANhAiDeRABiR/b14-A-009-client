@@ -1,4 +1,5 @@
 import { validateImageUrl } from "./authValidation.js";
+import { calculateInclusiveDays } from "./rentalPricing.js";
 
 const PAYMENT_STATUS_VARIANTS = {
   paid: "success",
@@ -37,12 +38,22 @@ const MONTHS_SHORT = [
 
 export const RENTAL_FILTER_OPTIONS = [
   { label: "All Bookings", value: "all" },
-  { label: "Pending", value: "pending" },
-  { label: "Confirmed", value: "confirmed" },
-  { label: "Active", value: "active" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" },
+  { label: "Pending", value: "Pending" },
+  { label: "Confirmed", value: "Confirmed" },
+  { label: "Active", value: "Active" },
+  { label: "Completed", value: "Completed" },
+  { label: "Cancelled", value: "Cancelled" },
 ];
+
+export const PAYMENT_FILTER_OPTIONS = [
+  { label: "All Payments", value: "all" },
+  { label: "Paid", value: "Paid" },
+  { label: "Pending", value: "Pending" },
+  { label: "Failed", value: "Failed" },
+  { label: "Refunded", value: "Refunded" },
+];
+
+export const DEFAULT_BOOKINGS_LIMIT = 10;
 
 export function formatDisplayDate(rawDate) {
   if (!rawDate) return "—";
@@ -70,6 +81,19 @@ export function formatDisplayDate(rawDate) {
   return `${MONTHS_SHORT[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}, ${dateObj.getUTCFullYear()}`;
 }
 
+export function formatBookingDuration(startDate, endDate, fallbackDays = null) {
+  const days = calculateInclusiveDays(startDate, endDate);
+  const resolved =
+    days > 0
+      ? days
+      : typeof fallbackDays === "number" && fallbackDays > 0
+        ? Math.floor(fallbackDays)
+        : 0;
+
+  if (!resolved) return "—";
+  return `${resolved} ${resolved === 1 ? "day" : "days"}`;
+}
+
 export function getPaymentStatusBadge(status) {
   const raw = String(status || "Pending").trim();
   const variant = PAYMENT_STATUS_VARIANTS[raw.toLowerCase()] || "neutral";
@@ -80,6 +104,70 @@ export function getBookingStatusBadge(status) {
   const raw = String(status || "Pending").trim();
   const variant = BOOKING_STATUS_VARIANTS[raw.toLowerCase()] || "neutral";
   return { label: raw || "Pending", variant };
+}
+
+function normalizeOptionalFilterOption(rawValue, optionsList) {
+  const candidate = String(rawValue || "").trim();
+  if (!candidate || candidate.toLowerCase() === "all") return "all";
+  const match = optionsList.find(
+    (opt) => opt.value.toLowerCase() === candidate.toLowerCase()
+  );
+  return match ? match.value : "all";
+}
+
+export function parseBookingsFiltersFromParams(searchParams) {
+  const getParam = (key) =>
+    typeof searchParams?.get === "function"
+      ? searchParams.get(key)
+      : searchParams?.[key];
+
+  const rawPage = Number(getParam("page"));
+  const bookingParam = getParam("bookingStatus") || getParam("status");
+  const paymentParam = getParam("paymentStatus");
+
+  return {
+    search: String(getParam("search") || "").trim(),
+    bookingStatus: normalizeOptionalFilterOption(
+      bookingParam,
+      RENTAL_FILTER_OPTIONS
+    ),
+    paymentStatus: normalizeOptionalFilterOption(
+      paymentParam,
+      PAYMENT_FILTER_OPTIONS
+    ),
+    page: Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1,
+    limit: DEFAULT_BOOKINGS_LIMIT,
+  };
+}
+
+export function buildBookingsQueryString(filters = {}) {
+  const params = new URLSearchParams();
+
+  const search = String(filters.search || "").trim();
+  if (search) params.set("search", search);
+
+  const bookingStatus = normalizeOptionalFilterOption(
+    filters.bookingStatus,
+    RENTAL_FILTER_OPTIONS
+  );
+  if (bookingStatus !== "all") {
+    params.set("bookingStatus", bookingStatus);
+  }
+
+  const paymentStatus = normalizeOptionalFilterOption(
+    filters.paymentStatus,
+    PAYMENT_FILTER_OPTIONS
+  );
+  if (paymentStatus !== "all") {
+    params.set("paymentStatus", paymentStatus);
+  }
+
+  const page = Number(filters.page);
+  if (Number.isFinite(page) && page > 1) {
+    params.set("page", String(Math.floor(page)));
+  }
+
+  return params.toString();
 }
 
 export function normalizeCustomerRental(raw) {
@@ -100,26 +188,80 @@ export function normalizeCustomerRental(raw) {
   const equipmentCategory =
     equipmentObj.category || raw.equipmentCategory || "";
 
+  const ownerObj =
+    equipmentObj.owner && typeof equipmentObj.owner === "object"
+      ? equipmentObj.owner
+      : raw.owner && typeof raw.owner === "object"
+        ? raw.owner
+        : null;
+  const ownerName =
+    ownerObj?.name || equipmentObj.ownerName || raw.ownerName || "";
+
   const startDate = raw.startDate || raw.rentalStartDate || "";
   const endDate = raw.endDate || raw.rentalEndDate || "";
   const createdAt = raw.createdAt || raw.bookingDate || startDate || "";
   const totalAmount = Number(raw.totalAmount ?? raw.amount ?? 0);
 
+  const rawUnitPrice =
+    raw.rentalPrice ?? raw.unitPrice ?? equipmentObj.rentalPrice;
+  const rentalPrice =
+    rawUnitPrice !== undefined &&
+    rawUnitPrice !== null &&
+    Number.isFinite(Number(rawUnitPrice))
+      ? Number(rawUnitPrice)
+      : null;
+
+  const rawQty = raw.quantity ?? raw.requiredQuantity;
+  const quantity =
+    rawQty !== undefined &&
+    rawQty !== null &&
+    Number.isFinite(Number(rawQty)) &&
+    Number(rawQty) > 0
+      ? Math.floor(Number(rawQty))
+      : null;
+
+  const rawDuration = raw.durationDays ?? raw.duration ?? raw.totalDays;
+  const computedDays = calculateInclusiveDays(startDate, endDate);
+  const durationDays =
+    computedDays > 0
+      ? computedDays
+      : rawDuration !== undefined &&
+          rawDuration !== null &&
+          Number.isFinite(Number(rawDuration)) &&
+          Number(rawDuration) > 0
+        ? Math.floor(Number(rawDuration))
+        : null;
+
   return {
     _id: String(raw._id || raw.id || ""),
+    bookingReference: String(
+      raw.bookingReference || raw.referenceId || raw.bookingCode || raw._id || raw.id || ""
+    ),
     equipmentId: equipmentId ? String(equipmentId) : "",
     equipment: {
       _id: equipmentId ? String(equipmentId) : "",
       name: equipmentName,
       image: equipmentImage,
       category: equipmentCategory,
+      ownerName,
     },
     startDate,
     endDate,
+    durationDays,
     createdAt,
+    quantity,
+    rentalType: String(raw.rentalType || equipmentObj.rentalType || ""),
+    rentalPrice,
     totalAmount: Number.isFinite(totalAmount) ? totalAmount : 0,
     paymentStatus: String(raw.paymentStatus || "Pending"),
     bookingStatus: String(raw.bookingStatus || raw.status || "Pending"),
+    transactionId: String(
+      raw.transactionId || raw.paymentIntentId || raw.stripeSessionId || ""
+    ),
+    paidAt: raw.paidAt || raw.paymentDate || "",
+    contactNumber: String(raw.contactNumber || raw.phone || ""),
+    deliveryAddress: String(raw.deliveryAddress || ""),
+    additionalNotes: String(raw.additionalNotes || raw.notes || ""),
   };
 }
 

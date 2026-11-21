@@ -3,7 +3,16 @@
 import * as React from "react";
 import { Search, X } from "lucide-react";
 
-export function EquipmentSearch({ value = "", onSearchChange }) {
+export function EquipmentSearch({
+  value = "",
+  onSearchChange,
+  id = "equipment-search-input",
+  placeholder = "Search equipment by name or location...",
+  ariaLabel = "Search equipment",
+  srLabel = "Search equipment by name, category, or location",
+  debounceMs = 350,
+  clearLabel = "Clear search query",
+}) {
   const [draftValue, setDraftValue] = React.useState(null);
   const timerRef = React.useRef(null);
 
@@ -32,7 +41,7 @@ export function EquipmentSearch({ value = "", onSearchChange }) {
     timerRef.current = setTimeout(() => {
       onSearchChange(next);
       setDraftValue(null);
-    }, 350);
+    }, debounceMs);
   };
 
   const handleSubmit = (event) => {
@@ -48,11 +57,11 @@ export function EquipmentSearch({ value = "", onSearchChange }) {
     <form
       onSubmit={handleSubmit}
       role="search"
-      aria-label="Search equipment"
+      aria-label={ariaLabel}
       className="relative flex-1"
     >
-      <label htmlFor="equipment-search-input" className="sr-only">
-        Search equipment by name, category, or location
+      <label htmlFor={id} className="sr-only">
+        {srLabel}
       </label>
 
       <Search
@@ -61,12 +70,12 @@ export function EquipmentSearch({ value = "", onSearchChange }) {
       />
 
       <input
-        id="equipment-search-input"
+        id={id}
         name="search"
         type="search"
         value={displayValue}
         onChange={handleChange}
-        placeholder="Search equipment by name or location..."
+        placeholder={placeholder}
         className="min-h-11 w-full rounded-lg border border-border bg-surface pr-10 pl-10 text-base text-foreground shadow-xs transition-colors duration-150 placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:text-sm [&::-webkit-search-cancel-button]:hidden"
       />
 
@@ -74,7 +83,7 @@ export function EquipmentSearch({ value = "", onSearchChange }) {
         <button
           type="button"
           onClick={handleClear}
-          aria-label="Clear search query"
+          aria-label={clearLabel}
           className="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-text-secondary transition-colors hover:bg-surface-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X aria-hidden="true" className="size-4" />

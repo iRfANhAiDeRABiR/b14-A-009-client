@@ -1,5 +1,8 @@
 import { ApiError, apiRequest } from "@/lib/apiClient";
-import { normalizeCustomerRental } from "@/lib/customerUtils";
+import {
+  DEFAULT_BOOKINGS_LIMIT,
+  normalizeCustomerRental,
+} from "@/lib/customerUtils";
 import { getAccessToken } from "@/lib/token-provider";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
@@ -22,13 +25,16 @@ function createBackendUnavailableError(actionLabel) {
 }
 
 /**
- * Fetch the authenticated customer's rental bookings:
- * GET {NEXT_PUBLIC_API_BASE_URL}/api/bookings/my
+ * Fetch the authenticated customer's rental bookings with server-side filters & pagination:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/bookings/my?page=1&limit=10&bookingStatus=...&paymentStatus=...&search=...
  */
-export async function getMyRentals({
+export async function getMyBookings({
+  bookingStatus = "all",
+  paymentStatus = "all",
   status = "",
+  search = "",
   page = 1,
-  limit = 10,
+  limit = DEFAULT_BOOKINGS_LIMIT,
   token = null,
 } = {}) {
   const activeToken = token || (await getAccessToken());
@@ -40,20 +46,32 @@ export async function getMyRentals({
   }
 
   const params = new URLSearchParams();
-  if (status && status !== "all") {
-    params.set("status", status);
-  }
-  if (page && Number(page) > 1) {
-    params.set("page", String(page));
-  }
-  if (limit && Number(limit) > 0) {
-    params.set("limit", String(limit));
+  const safePage = Number.isFinite(Number(page)) && Number(page) >= 1 ? Math.floor(Number(page)) : 1;
+  const safeLimit = Number.isFinite(Number(limit)) && Number(limit) >= 1 ? Math.floor(Number(limit)) : DEFAULT_BOOKINGS_LIMIT;
+
+  params.set("page", String(safePage));
+  params.set("limit", String(safeLimit));
+
+  const resolvedBookingStatus =
+    bookingStatus && bookingStatus !== "all"
+      ? bookingStatus
+      : status && status !== "all"
+        ? status
+        : "";
+  if (resolvedBookingStatus) {
+    params.set("bookingStatus", resolvedBookingStatus);
   }
 
-  const queryString = params.toString();
-  const path = queryString ? `/api/bookings/my?${queryString}` : "/api/bookings/my";
+  if (paymentStatus && paymentStatus !== "all") {
+    params.set("paymentStatus", paymentStatus);
+  }
 
-  const payload = await apiRequest(path, {
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    params.set("search", trimmedSearch);
+  }
+
+  const payload = await apiRequest(`/api/bookings/my?${params.toString()}`, {
     method: "GET",
     token: activeToken,
     authRequired: true,
@@ -68,23 +86,44 @@ export async function getMyRentals({
         : [];
 
   const items = rawList.map(normalizeCustomerRental).filter(Boolean);
-  const rawPagination = payload?.pagination || payload?.meta || {};
-  const total =
-    typeof rawPagination.total === "number"
-      ? rawPagination.total
-      : items.length;
-  const totalPages =
-    typeof rawPagination.totalPages === "number"
-      ? rawPagination.totalPages
-      : Math.max(1, Math.ceil(total / (limit || 10)));
+  const rawPagination = payload?.pagination || payload?.meta || null;
+
+  const hasServerPagination = Boolean(
+    rawPagination &&
+      (typeof rawPagination.totalItems === "number" ||
+        typeof rawPagination.total === "number" ||
+        typeof rawPagination.totalPages === "number")
+  );
+
+  const totalItems = hasServerPagination
+    ? Number(rawPagination.totalItems ?? rawPagination.total ?? items.length)
+    : items.length;
+  const resolvedLimit = Number(rawPagination?.limit || safeLimit);
+  const currentPage = Number(
+    rawPagination?.currentPage ?? rawPagination?.page ?? safePage
+  );
+  const totalPages = hasServerPagination
+    ? Math.max(
+        totalItems > 0 ? 1 : 0,
+        Number(
+          rawPagination.totalPages ??
+            Math.ceil(totalItems / Math.max(1, resolvedLimit))
+        )
+      )
+    : items.length > 0
+      ? 1
+      : 0;
 
   return {
     items,
     pagination: {
-      page: Number(rawPagination.page || page || 1),
-      limit: Number(rawPagination.limit || limit || 10),
-      total,
+      currentPage,
+      page: currentPage,
+      limit: resolvedLimit,
+      totalItems,
+      total: totalItems,
       totalPages,
+      serverPaginationSupported: hasServerPagination,
     },
     monthlyAnalytics: Array.isArray(payload?.monthlyAnalytics)
       ? payload.monthlyAnalytics
@@ -94,6 +133,52 @@ export async function getMyRentals({
         ? payload.summary
         : null,
   };
+}
+
+/**
+ * Backwards-compatible alias consumed by CustomerOverview / customerService.
+ */
+export async function getMyRentals(options = {}) {
+  return getMyBookings(options);
+}
+
+/**
+ * Fetch detailed booking record belonging to the authenticated user:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/bookings/:bookingId
+ */
+export async function getBookingDetails(bookingId, { token = null } = {}) {
+  if (!bookingId) {
+    throw new ApiError("Booking ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("inspect booking details");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError("load booking details");
+  }
+
+  const payload = await apiRequest(
+    `/api/bookings/${encodeURIComponent(bookingId)}`,
+    {
+      method: "GET",
+      token: activeToken,
+      authRequired: true,
+    }
+  );
+
+  const record =
+    payload?.data && typeof payload.data === "object"
+      ? payload.data
+      : payload?.booking && typeof payload.booking === "object"
+        ? payload.booking
+        : payload;
+
+  return normalizeCustomerRental(record);
 }
 
 /**
