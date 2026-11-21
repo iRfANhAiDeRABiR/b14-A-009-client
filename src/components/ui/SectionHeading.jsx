@@ -11,6 +11,7 @@ export function SectionHeading({
   title,
   description,
   as: Component = "h2",
+  headingId,
   variant = "section",
   align = "left",
   actions,
@@ -32,6 +33,7 @@ export function SectionHeading({
         ) : null}
 
         <Component
+          id={headingId}
           className={cn(
             HEADING_STYLES[variant] ?? HEADING_STYLES.section,
             eyebrow ? "mt-2" : "",

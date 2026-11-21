@@ -26,13 +26,15 @@ src/
     page.js          # Initial GearNest landing page
     globals.css      # Tailwind v4 setup and GearNest design tokens
   components/
-    home/            # Animated homepage Hero sections (HeroSection, HeroVisual, HeroTrustIndicators)
+    equipment/       # Reusable EquipmentCard and EquipmentCardSkeleton
+    home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
     layout/          # Navbar, Footer, and MainLayout
     shared/          # BrandLogo and reusable placeholder pages
     ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton)
+  data/              # Demo fallback equipment, categories, and sample reviews
   lib/               # Utilities and site configuration constants
   hooks/             # Custom React hooks (future milestones)
-  services/          # API client services (future milestones)
+  services/          # API client services (equipmentService)
   context/           # React context providers (future milestones)
 public/
   images/            # Curated local imagery
