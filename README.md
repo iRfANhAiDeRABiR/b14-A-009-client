@@ -31,17 +31,18 @@ src/
     dashboard/       # Role-protected Customer, Owner, and Admin workspaces (/dashboard/{customer,owner,admin}/*)
   components/
     auth/            # AuthLayout, LoginForm, RegisterForm, GoogleLoginButton, PasswordInput, ProtectedRoute, 403/Session states
+    customer/        # CustomerOverview, CustomerStats, MonthlyRentalChart, RecentRentals, FavoritePreview, MyRentalsTable, FavoritesTable, ProfileForm
     dashboard/       # DashboardLayout, DashboardSidebar, DashboardHeader, DashboardMobileNav, DashboardBreadcrumbs, DashboardUserMenu, Skeletons
     equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
     layout/          # Navbar, Footer, ChromeSlots, and MainLayout (with ToastProvider & AuthProvider)
     shared/          # BrandLogo and reusable placeholder pages
-    ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton, ToastViewport)
+    ui/              # Design system components (Button, Input, Badge, Card, ConfirmDialog, SectionHeading, Container, Skeleton, ToastViewport)
   context/           # React context providers (AuthProvider, ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
-  lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient (401/403), validation, roleNavigation & redirect resolver
+  lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient, validation, customerUtils, roleNavigation & pricing
   hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites)
-  services/          # API client services (authService, equipmentService, favoriteService, bookingService)
+  services/          # API client services (authService, customerService, equipmentService, favoriteService, bookingService, profileService)
 public/
   images/            # Curated local imagery
   icons/             # Brand mark and vector assets

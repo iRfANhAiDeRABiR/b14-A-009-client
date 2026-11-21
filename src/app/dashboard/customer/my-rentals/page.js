@@ -1,17 +1,11 @@
-import { DashboardPlaceholderView } from "@/components/dashboard/DashboardPlaceholderView";
-import { USER_ROLES } from "@/lib/roleNavigation";
+import { MyRentalsTable } from "@/components/customer/MyRentalsTable";
 
 export const metadata = {
   title: "My Rentals",
+  description:
+    "Track and manage all your equipment rental bookings, payment statuses, and schedules.",
 };
 
 export default function CustomerRentalsPage() {
-  return (
-    <DashboardPlaceholderView
-      portalRole={USER_ROLES.CUSTOMER}
-      title="My Rentals"
-      description="Inspect active rental durations, Stripe Checkout payment confirmations, delivery addresses, and completed bookings."
-      milestoneNote="This route is protected by Better Auth Customer role authorization. Rental lists will populate dynamically from protected Express API endpoints."
-    />
-  );
+  return <MyRentalsTable />;
 }

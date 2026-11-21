@@ -1,4 +1,5 @@
 import { ApiError, apiRequest } from "@/lib/apiClient";
+import { normalizeFavoriteEquipment } from "@/lib/customerUtils";
 import { getAccessToken } from "@/lib/token-provider";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
@@ -81,6 +82,36 @@ export async function getFavorites({ token } = {}) {
       requiresAuth: false,
     };
   }
+}
+
+/**
+ * Return normalized customer favorite equipment records, throwing structured errors
+ * for dedicated dashboard error states instead of silently swallowing backend failures.
+ */
+export async function getMyFavorites({ token = null } = {}) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createUnauthorizedError();
+  }
+  if (!API_BASE_URL) {
+    throw createServiceUnavailableError();
+  }
+
+  const json = await apiRequest("/api/favorites", {
+    method: "GET",
+    token: activeToken,
+    authRequired: true,
+  });
+
+  const list = Array.isArray(json)
+    ? json
+    : Array.isArray(json?.data)
+      ? json.data
+      : Array.isArray(json?.favorites)
+        ? json.favorites
+        : [];
+
+  return list.map(normalizeFavoriteEquipment).filter(Boolean);
 }
 
 /**

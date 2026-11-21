@@ -1,17 +1,11 @@
-import { DashboardPlaceholderView } from "@/components/dashboard/DashboardPlaceholderView";
-import { USER_ROLES } from "@/lib/roleNavigation";
+import { ProfileForm } from "@/components/customer/ProfileForm";
 
 export const metadata = {
   title: "My Profile",
+  description:
+    "Manage your GearNest customer personal information, avatar photo, and contact details.",
 };
 
 export default function CustomerProfilePage() {
-  return (
-    <DashboardPlaceholderView
-      portalRole={USER_ROLES.CUSTOMER}
-      title="Customer Profile"
-      description="Review your authenticated customer identity, avatar photo, and marketplace contact preferences."
-      milestoneNote="Editable customer profile fields will connect directly to Better Auth / Express profile endpoints in the upcoming dashboard milestone."
-    />
-  );
+  return <ProfileForm />;
 }

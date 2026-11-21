@@ -1,0 +1,327 @@
+import { validateImageUrl } from "./authValidation.js";
+
+const PAYMENT_STATUS_VARIANTS = {
+  paid: "success",
+  succeeded: "success",
+  pending: "warning",
+  unpaid: "warning",
+  processing: "warning",
+  failed: "danger",
+  cancelled: "danger",
+  refunded: "neutral",
+};
+
+const BOOKING_STATUS_VARIANTS = {
+  pending: "warning",
+  confirmed: "primary",
+  active: "success",
+  completed: "success",
+  cancelled: "danger",
+  canceled: "danger",
+};
+
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+export const RENTAL_FILTER_OPTIONS = [
+  { label: "All Bookings", value: "all" },
+  { label: "Pending", value: "pending" },
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Active", value: "active" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+];
+
+export function formatDisplayDate(rawDate) {
+  if (!rawDate) return "—";
+  const str = String(rawDate).trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+
+  let dateObj;
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const monthIndex = Number(isoMatch[2]) - 1;
+    const day = Number(isoMatch[3]);
+    dateObj = new Date(Date.UTC(year, monthIndex, day));
+    if (
+      dateObj.getUTCFullYear() !== year ||
+      dateObj.getUTCMonth() !== monthIndex ||
+      dateObj.getUTCDate() !== day
+    ) {
+      return "—";
+    }
+    return `${MONTHS_SHORT[monthIndex]} ${day}, ${year}`;
+  }
+
+  dateObj = new Date(str);
+  if (Number.isNaN(dateObj.getTime())) return "—";
+  return `${MONTHS_SHORT[dateObj.getUTCMonth()]} ${dateObj.getUTCDate()}, ${dateObj.getUTCFullYear()}`;
+}
+
+export function getPaymentStatusBadge(status) {
+  const raw = String(status || "Pending").trim();
+  const variant = PAYMENT_STATUS_VARIANTS[raw.toLowerCase()] || "neutral";
+  return { label: raw || "Pending", variant };
+}
+
+export function getBookingStatusBadge(status) {
+  const raw = String(status || "Pending").trim();
+  const variant = BOOKING_STATUS_VARIANTS[raw.toLowerCase()] || "neutral";
+  return { label: raw || "Pending", variant };
+}
+
+export function normalizeCustomerRental(raw) {
+  if (!raw || typeof raw !== "object") return null;
+
+  const equipmentObj =
+    raw.equipment && typeof raw.equipment === "object" ? raw.equipment : {};
+
+  const equipmentId =
+    equipmentObj._id || equipmentObj.id || raw.equipmentId || "";
+  const equipmentName =
+    equipmentObj.name || raw.equipmentName || "Equipment Item";
+  const equipmentImage =
+    equipmentObj.image ||
+    (Array.isArray(equipmentObj.images) ? equipmentObj.images[0] : "") ||
+    raw.equipmentImage ||
+    "/images/hero-equipment.jpg";
+  const equipmentCategory =
+    equipmentObj.category || raw.equipmentCategory || "";
+
+  const startDate = raw.startDate || raw.rentalStartDate || "";
+  const endDate = raw.endDate || raw.rentalEndDate || "";
+  const createdAt = raw.createdAt || raw.bookingDate || startDate || "";
+  const totalAmount = Number(raw.totalAmount ?? raw.amount ?? 0);
+
+  return {
+    _id: String(raw._id || raw.id || ""),
+    equipmentId: equipmentId ? String(equipmentId) : "",
+    equipment: {
+      _id: equipmentId ? String(equipmentId) : "",
+      name: equipmentName,
+      image: equipmentImage,
+      category: equipmentCategory,
+    },
+    startDate,
+    endDate,
+    createdAt,
+    totalAmount: Number.isFinite(totalAmount) ? totalAmount : 0,
+    paymentStatus: String(raw.paymentStatus || "Pending"),
+    bookingStatus: String(raw.bookingStatus || raw.status || "Pending"),
+  };
+}
+
+export function normalizeFavoriteEquipment(raw) {
+  if (!raw || typeof raw !== "object") return null;
+
+  const item =
+    raw.equipment && typeof raw.equipment === "object" ? raw.equipment : raw;
+  const equipmentId =
+    item._id || item.id || raw.equipmentId || raw._id || "";
+
+  if (!equipmentId) return null;
+
+  const availableQuantity =
+    typeof item.availableQuantity === "number"
+      ? item.availableQuantity
+      : Number(item.availableQuantity);
+
+  const hasNumericStock = Number.isFinite(availableQuantity);
+  const derivedAvailability =
+    item.availabilityStatus ||
+    (hasNumericStock
+      ? availableQuantity > 0
+        ? "Available"
+        : "Unavailable"
+      : "Unknown");
+
+  return {
+    favoriteId: String(raw._id || raw.id || equipmentId),
+    equipmentId: String(equipmentId),
+    name: item.name || "Saved Equipment",
+    image:
+      item.image ||
+      (Array.isArray(item.images) ? item.images[0] : "") ||
+      "/images/hero-equipment.jpg",
+    category: item.category || "Equipment",
+    rentalPrice: Number(item.rentalPrice ?? 0) || 0,
+    rentalType: item.rentalType || "Daily",
+    location: item.location || "Bangladesh",
+    availableQuantity: hasNumericStock ? availableQuantity : null,
+    availabilityStatus: derivedAvailability,
+  };
+}
+
+export function computeCustomerStats(
+  rentals = [],
+  favoritesCount = 0,
+  backendSummary = null
+) {
+  const safeRentals = Array.isArray(rentals) ? rentals : [];
+
+  if (backendSummary && typeof backendSummary === "object") {
+    const hasExplicitCounts =
+      typeof backendSummary.totalRentals === "number" &&
+      typeof backendSummary.activeRentals === "number" &&
+      typeof backendSummary.completedRentals === "number";
+
+    if (hasExplicitCounts) {
+      return {
+        totalRentals: backendSummary.totalRentals,
+        activeRentals: backendSummary.activeRentals,
+        completedRentals: backendSummary.completedRentals,
+        favoriteCount:
+          typeof backendSummary.favoriteCount === "number"
+            ? backendSummary.favoriteCount
+            : Math.max(0, Number(favoritesCount) || 0),
+      };
+    }
+  }
+
+  let activeRentals = 0;
+  let completedRentals = 0;
+
+  for (const rental of safeRentals) {
+    const status = String(rental?.bookingStatus || "").trim().toLowerCase();
+    if (status === "active") {
+      activeRentals += 1;
+    } else if (status === "completed") {
+      completedRentals += 1;
+    }
+  }
+
+  return {
+    totalRentals: safeRentals.length,
+    activeRentals,
+    completedRentals,
+    favoriteCount: Math.max(0, Number(favoritesCount) || 0),
+  };
+}
+
+export function aggregateMonthlyRentals(
+  rentals = [],
+  backendMonthly = null,
+  maxMonths = 6
+) {
+  if (Array.isArray(backendMonthly) && backendMonthly.length > 0) {
+    return backendMonthly
+      .map((entry) => ({
+        monthKey: String(entry.monthKey || entry.month || ""),
+        label: String(entry.label || entry.month || "Month"),
+        bookingsCount: Number(entry.bookingsCount ?? entry.count ?? 0) || 0,
+        totalAmount: Number(entry.totalAmount ?? entry.amount ?? 0) || 0,
+      }))
+      .slice(-maxMonths);
+  }
+
+  const safeRentals = Array.isArray(rentals) ? rentals : [];
+  if (safeRentals.length === 0) return [];
+
+  const buckets = new Map();
+
+  for (const rental of safeRentals) {
+    const rawDate = rental?.createdAt || rental?.startDate;
+    if (!rawDate) continue;
+
+    const match = /^(\d{4})-(\d{2})/.exec(String(rawDate).trim());
+    let year;
+    let monthIndex;
+
+    if (match) {
+      year = Number(match[1]);
+      monthIndex = Number(match[2]) - 1;
+    } else {
+      const parsed = new Date(rawDate);
+      if (Number.isNaN(parsed.getTime())) continue;
+      year = parsed.getUTCFullYear();
+      monthIndex = parsed.getUTCMonth();
+    }
+
+    if (monthIndex < 0 || monthIndex > 11) continue;
+
+    const key = `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+    const existing = buckets.get(key) || {
+      monthKey: key,
+      label: `${MONTHS_SHORT[monthIndex]} ${year}`,
+      bookingsCount: 0,
+      totalAmount: 0,
+    };
+
+    existing.bookingsCount += 1;
+    existing.totalAmount += Math.max(0, Number(rental?.totalAmount) || 0);
+    buckets.set(key, existing);
+  }
+
+  return Array.from(buckets.values())
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+    .slice(-maxMonths);
+}
+
+export function validateCustomerProfile({
+  name = "",
+  photoURL = "",
+  phone = "",
+  address = "",
+} = {}) {
+  const errors = {};
+
+  const trimmedName = String(name || "").trim();
+  if (!trimmedName) {
+    errors.name = "Full name is required.";
+  } else if (trimmedName.length < 2) {
+    errors.name = "Full name must be at least 2 characters.";
+  } else if (trimmedName.length > 80) {
+    errors.name = "Full name cannot exceed 80 characters.";
+  }
+
+  const photoError = validateImageUrl(photoURL);
+  if (photoError) {
+    errors.photoURL = photoError;
+  }
+
+  const trimmedPhone = String(phone || "").trim();
+  if (trimmedPhone) {
+    const digitsOnly = trimmedPhone.replace(/\D/g, "");
+    if (
+      !/^\+?[0-9\s\-()]+$/.test(trimmedPhone) ||
+      digitsOnly.length < 7 ||
+      digitsOnly.length > 15
+    ) {
+      errors.phone =
+        "Enter a valid phone number (7 to 15 digits, e.g., 01XXXXXXXXX).";
+    }
+  }
+
+  const trimmedAddress = String(address || "").trim();
+  if (trimmedAddress.length > 250) {
+    errors.address = "Address cannot exceed 250 characters.";
+  }
+
+  return errors;
+}
+
+export function buildProfileUpdatePayload({
+  name = "",
+  photoURL = "",
+  phone = "",
+  address = "",
+} = {}) {
+  return {
+    name: String(name || "").trim(),
+    photoURL: String(photoURL || "").trim(),
+    phone: String(phone || "").trim(),
+    address: String(address || "").trim(),
+  };
+}
