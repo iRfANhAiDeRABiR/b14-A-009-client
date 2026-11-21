@@ -19,11 +19,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/context/ToastContext";
 import {
   evaluatePasswordRules,
+  getCallbackPathFromSearchParams,
   sanitizeRedirectPath,
   validateEmail,
   validateImageUrl,
   validatePassword,
 } from "@/lib/authValidation";
+import { resolvePostLoginRedirect } from "@/lib/roleNavigation";
 import {
   hasImgBBConfigured,
   uploadProfilePhotoToImgBB,
@@ -40,22 +42,23 @@ export function RegisterForm() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const {
+    role,
     isAuthenticated,
     isLoading: isSessionLoading,
     register,
     loginWithGoogle,
   } = useAuth();
 
-  const rawRedirect = searchParams.get("redirectTo");
-  const redirectTarget = React.useMemo(
-    () => sanitizeRedirectPath(rawRedirect, "/"),
-    [rawRedirect]
+  const rawCallback = getCallbackPathFromSearchParams(searchParams);
+  const safeCallback = React.useMemo(
+    () => sanitizeRedirectPath(rawCallback, ""),
+    [rawCallback]
   );
 
   const loginHref = React.useMemo(() => {
-    if (!rawRedirect || redirectTarget === "/") return "/login";
-    return `/login?redirectTo=${encodeURIComponent(redirectTarget)}`;
-  }, [rawRedirect, redirectTarget]);
+    if (!safeCallback) return "/login";
+    return `/login?callbackURL=${encodeURIComponent(safeCallback)}`;
+  }, [safeCallback]);
 
   const imgbbEnabled = React.useMemo(() => hasImgBBConfigured(), []);
   const errorBannerRef = React.useRef(null);
@@ -75,9 +78,9 @@ export function RegisterForm() {
 
   React.useEffect(() => {
     if (!isSessionLoading && isAuthenticated) {
-      router.replace(redirectTarget);
+      router.replace(resolvePostLoginRedirect(safeCallback, role));
     }
-  }, [isAuthenticated, isSessionLoading, redirectTarget, router]);
+  }, [isAuthenticated, isSessionLoading, role, router, safeCallback]);
 
   const passwordRules = React.useMemo(
     () => evaluatePasswordRules(values.password),
@@ -162,7 +165,7 @@ export function RegisterForm() {
     setIsSubmitting(true);
 
     try {
-      await register({
+      const result = await register({
         name: trimmedName,
         email: values.email,
         password: values.password,
@@ -175,7 +178,9 @@ export function RegisterForm() {
         variant: "success",
       });
 
-      router.replace(redirectTarget);
+      router.replace(
+        resolvePostLoginRedirect(safeCallback, result?.user?.role)
+      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -195,7 +200,7 @@ export function RegisterForm() {
     setIsGoogleLoading(true);
 
     try {
-      await loginWithGoogle({ redirectTo: redirectTarget });
+      await loginWithGoogle({ redirectTo: safeCallback || "/dashboard" });
     } catch (error) {
       const message =
         error instanceof Error

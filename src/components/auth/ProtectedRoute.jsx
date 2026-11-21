@@ -2,46 +2,19 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, LayoutDashboard, ShieldAlert } from "lucide-react";
 
+import { AUTH_STATUS } from "@/context/AuthProvider";
+import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import { buildLoginRedirectUrl } from "@/lib/authValidation";
-import {
-  getRoleLabel,
-  isRoleAllowed,
-} from "@/lib/roleNavigation";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import { Container } from "@/components/ui/Container";
-import { Skeleton } from "@/components/ui/Skeleton";
-
-function DefaultProtectedSkeleton() {
-  return (
-    <section
-      role="status"
-      aria-busy="true"
-      aria-label="Verifying authentication session"
-      className="py-14 sm:py-20"
-    >
-      <Container size="md">
-        <Card padding="lg" className="space-y-4 rounded-2xl">
-          <Skeleton className="h-6 w-36 rounded-full" />
-          <Skeleton variant="text" className="h-9 w-64" />
-          <Skeleton variant="text" className="w-full max-w-md" />
-          <div className="grid gap-4 pt-2 sm:grid-cols-2">
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-          </div>
-        </Card>
-      </Container>
-    </section>
-  );
-}
+import { getRoleLabel, isRoleAllowed } from "@/lib/roleNavigation";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { SessionErrorState } from "@/components/auth/SessionStatusState";
+import { Unauthorized403State } from "@/components/auth/Unauthorized403State";
 
 /**
- * Private route guard wired to live Better Auth session state.
- * Never redirects while session loading is pending so authenticated refreshes
- * do not flash or bounce to /login.
+ * Private route & role boundary wired to live Better Auth session verification.
+ * Never trusts cookie presence alone and never redirects during initial session loading.
  */
 export function ProtectedRoute({
   allowedRoles = null,
@@ -50,62 +23,117 @@ export function ProtectedRoute({
 }) {
   const router = useRouter();
   const pathname = usePathname() || "/";
-  const { isAuthenticated, isLoading, role, dashboardHref } = useAuth();
+  const { showToast } = useToast();
+  const {
+    authStatus,
+    isAuthenticated,
+    isLoading,
+    role,
+    dashboardHref,
+    error,
+    retrySession,
+    logout,
+  } = useAuth();
 
-  const redirectUrl = React.useMemo(() => {
+  const notifiedForbiddenRef = React.useRef("");
+  const notifiedExpiredRef = React.useRef(false);
+
+  const destinationPath = React.useMemo(() => {
     if (typeof window === "undefined") {
-      return buildLoginRedirectUrl(pathname);
+      return pathname;
     }
-    const destination = `${pathname}${window.location.search || ""}`;
-    return buildLoginRedirectUrl(destination);
+    return `${pathname}${window.location.search || ""}`;
   }, [pathname]);
 
-  React.useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace(redirectUrl);
-    }
-  }, [isAuthenticated, isLoading, redirectUrl, router]);
+  const unauthenticatedLoginUrl = React.useMemo(
+    () => buildLoginRedirectUrl(destinationPath),
+    [destinationPath]
+  );
 
-  if (isLoading || !isAuthenticated) {
-    return loadingFallback || <DefaultProtectedSkeleton />;
+  const expiredLoginUrl = React.useMemo(
+    () => buildLoginRedirectUrl(destinationPath, { reason: "session_expired" }),
+    [destinationPath]
+  );
+
+  const isRoleAuthorized =
+    !Array.isArray(allowedRoles) ||
+    allowedRoles.length === 0 ||
+    isRoleAllowed(role, allowedRoles);
+
+  React.useEffect(() => {
+    if (isLoading) return;
+
+    if (authStatus === AUTH_STATUS.EXPIRED) {
+      if (!notifiedExpiredRef.current) {
+        notifiedExpiredRef.current = true;
+        showToast({
+          title: "Session expired",
+          description: "Please sign in again to continue.",
+          variant: "warning",
+        });
+      }
+      router.replace(expiredLoginUrl);
+      return;
+    }
+
+    if (authStatus === AUTH_STATUS.UNAUTHENTICATED) {
+      router.replace(unauthenticatedLoginUrl);
+    }
+  }, [
+    authStatus,
+    expiredLoginUrl,
+    isLoading,
+    router,
+    showToast,
+    unauthenticatedLoginUrl,
+  ]);
+
+  React.useEffect(() => {
+    if (isLoading || !isAuthenticated || isRoleAuthorized) {
+      notifiedForbiddenRef.current = "";
+      return;
+    }
+
+    const forbiddenKey = `${role}|${pathname}`;
+    if (notifiedForbiddenRef.current !== forbiddenKey) {
+      notifiedForbiddenRef.current = forbiddenKey;
+      showToast({
+        title: "Access restricted (403)",
+        description: `Signed in as ${getRoleLabel(role)}. This section belongs to another role.`,
+        variant: "warning",
+      });
+    }
+  }, [isAuthenticated, isLoading, isRoleAuthorized, pathname, role, showToast]);
+
+  if (isLoading) {
+    return loadingFallback || <DashboardSkeleton />;
   }
 
-  if (Array.isArray(allowedRoles) && allowedRoles.length > 0 && !isRoleAllowed(role, allowedRoles)) {
+  if (authStatus === AUTH_STATUS.ERROR && !isAuthenticated) {
     return (
-      <section className="py-16 sm:py-24">
-        <Container size="sm">
-          <Card padding="lg" className="rounded-2xl text-center">
-            <span
-              aria-hidden="true"
-              className="mx-auto flex size-14 items-center justify-center rounded-xl bg-warning-bg text-warning"
-            >
-              <ShieldAlert className="size-7" />
-            </span>
+      <SessionErrorState
+        errorDetail={error?.message || ""}
+        onRetry={retrySession}
+        loginHref={unauthenticatedLoginUrl}
+      />
+    );
+  }
 
-            <h1 className="type-page-title mt-5 text-foreground">
-              Role access restricted
-            </h1>
-            <p className="mt-2.5 text-sm leading-relaxed text-text-secondary">
-              Your account is signed in with the{" "}
-              <span className="font-semibold text-foreground">
-                {getRoleLabel(role)}
-              </span>{" "}
-              role and does not have permission to view this portal section.
-            </p>
+  if (!isAuthenticated) {
+    return loadingFallback || <DashboardSkeleton />;
+  }
 
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Button href={dashboardHref} variant="primary" size="md">
-                <LayoutDashboard aria-hidden="true" className="size-4" />
-                <span>Go to My Dashboard</span>
-              </Button>
-              <Button href="/" variant="outline" size="md">
-                <ArrowLeft aria-hidden="true" className="size-4" />
-                <span>Back to Home</span>
-              </Button>
-            </div>
-          </Card>
-        </Container>
-      </section>
+  if (!isRoleAuthorized) {
+    return (
+      <Unauthorized403State
+        currentRole={role}
+        allowedRoles={allowedRoles}
+        dashboardHref={dashboardHref}
+        onLogout={async () => {
+          await logout();
+          router.replace(unauthenticatedLoginUrl);
+        }}
+      />
     );
   }
 

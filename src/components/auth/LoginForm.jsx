@@ -3,15 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, LogIn, Mail } from "lucide-react";
+import { AlertCircle, Clock, LogIn, Mail } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/context/ToastContext";
 import {
+  getCallbackPathFromSearchParams,
   sanitizeRedirectPath,
   validateEmail,
   validatePassword,
 } from "@/lib/authValidation";
+import { resolvePostLoginRedirect } from "@/lib/roleNavigation";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
@@ -32,22 +34,25 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const {
+    role,
     isAuthenticated,
     isLoading: isSessionLoading,
     login,
     loginWithGoogle,
   } = useAuth();
 
-  const rawRedirect = searchParams.get("redirectTo");
-  const redirectTarget = React.useMemo(
-    () => sanitizeRedirectPath(rawRedirect, "/"),
-    [rawRedirect]
+  const rawCallback = getCallbackPathFromSearchParams(searchParams);
+  const safeCallback = React.useMemo(
+    () => sanitizeRedirectPath(rawCallback, ""),
+    [rawCallback]
   );
+  const isSessionExpiredReason =
+    searchParams.get("reason") === "session_expired";
 
   const registerHref = React.useMemo(() => {
-    if (!rawRedirect || redirectTarget === "/") return "/register";
-    return `/register?redirectTo=${encodeURIComponent(redirectTarget)}`;
-  }, [rawRedirect, redirectTarget]);
+    if (!safeCallback) return "/register";
+    return `/register?callbackURL=${encodeURIComponent(safeCallback)}`;
+  }, [safeCallback]);
 
   const errorBannerRef = React.useRef(null);
 
@@ -62,12 +67,12 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false);
 
-  // If the user is already authenticated, leave /login cleanly without trapping them.
+  // If already authenticated, leave /login cleanly toward authorized destination or role dashboard.
   React.useEffect(() => {
     if (!isSessionLoading && isAuthenticated) {
-      router.replace(redirectTarget);
+      router.replace(resolvePostLoginRedirect(safeCallback, role));
     }
-  }, [isAuthenticated, isSessionLoading, redirectTarget, router]);
+  }, [isAuthenticated, isSessionLoading, role, router, safeCallback]);
 
   const isBusy = isSubmitting || isGoogleLoading;
 
@@ -118,7 +123,9 @@ export function LoginForm() {
         variant: "success",
       });
 
-      router.replace(redirectTarget);
+      router.replace(
+        resolvePostLoginRedirect(safeCallback, result?.user?.role)
+      );
     } catch (error) {
       const message =
         error instanceof Error
@@ -138,7 +145,7 @@ export function LoginForm() {
     setIsGoogleLoading(true);
 
     try {
-      await loginWithGoogle({ redirectTo: redirectTarget });
+      await loginWithGoogle({ redirectTo: safeCallback || "/dashboard" });
     } catch (error) {
       const message =
         error instanceof Error
@@ -158,6 +165,18 @@ export function LoginForm() {
       asideTitle="Reliable rentals start with verified access."
       asideDescription="Sign in to compare live fleet availability, manage active bookings, and complete protected payments across the marketplace."
     >
+      {isSessionExpiredReason && !formError ? (
+        <div
+          role="status"
+          className="mb-5 flex items-start gap-2.5 rounded-xl border border-warning-border bg-warning-bg px-4 py-3 text-sm text-warning"
+        >
+          <Clock aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Your previous session expired. Sign in again to return safely to your requested workspace.
+          </span>
+        </div>
+      ) : null}
+
       {formError ? (
         <div
           ref={errorBannerRef}

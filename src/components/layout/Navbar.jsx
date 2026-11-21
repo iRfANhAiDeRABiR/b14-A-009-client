@@ -148,9 +148,7 @@ export function Navbar({ auth: authOverride = null }) {
         description: "Your GearNest session has ended cleanly.",
         variant: "neutral",
       });
-      if (pathname.startsWith("/dashboard")) {
-        router.replace("/login");
-      }
+      router.replace("/");
     } catch {
       showToast({
         title: "Logout issue",

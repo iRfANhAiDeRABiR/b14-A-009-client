@@ -1,4 +1,5 @@
-import { clearAccessTokenCache, getAccessToken } from "@/lib/token-provider";
+import { ApiError, apiRequest } from "@/lib/apiClient";
+import { getAccessToken } from "@/lib/token-provider";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   /\/+$/,
@@ -6,19 +7,17 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
 );
 
 function createAuthRequiredError(actionLabel) {
-  const err = new Error(
-    `Authentication required to ${actionLabel}. Please sign in before submitting a reservation.`
+  return new ApiError(
+    `Authentication required to ${actionLabel}. Please sign in before submitting a reservation.`,
+    { status: 401, code: "UNAUTHORIZED", requiresAuth: true }
   );
-  err.code = "UNAUTHORIZED";
-  return err;
 }
 
 function createBackendUnavailableError(actionLabel) {
-  const err = new Error(
-    `Unable to ${actionLabel}: the booking API server is not configured or unreachable yet.`
+  return new ApiError(
+    `Unable to ${actionLabel}: the booking API server is not configured or unreachable yet.`,
+    { status: 503, code: "SERVICE_UNAVAILABLE" }
   );
-  err.code = "SERVICE_UNAVAILABLE";
-  return err;
 }
 
 /**
@@ -40,38 +39,17 @@ export async function checkBookingAvailability({
     throw createBackendUnavailableError("verify live availability");
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/bookings/check-availability`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${activeToken}`,
-      },
-      body: JSON.stringify({
-        equipmentId,
-        startDate,
-        endDate,
-        quantity,
-      }),
-    }
-  );
-
-  if (response.status === 401 || response.status === 403) {
-    clearAccessTokenCache();
-    throw createAuthRequiredError("verify equipment availability");
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(
-      payload?.message ||
-        `Availability check failed with status ${response.status}.`
-    );
-  }
-
-  return payload;
+  return apiRequest("/api/bookings/check-availability", {
+    method: "POST",
+    body: {
+      equipmentId,
+      startDate,
+      endDate,
+      quantity,
+    },
+    token: activeToken,
+    authRequired: true,
+  });
 }
 
 /**
@@ -96,14 +74,9 @@ export async function createBooking({
     throw createBackendUnavailableError("submit booking");
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/bookings`, {
+  return apiRequest("/api/bookings", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${activeToken}`,
-    },
-    body: JSON.stringify({
+    body: {
       equipmentId,
       startDate,
       endDate,
@@ -111,20 +84,8 @@ export async function createBooking({
       contactNumber,
       deliveryAddress,
       additionalNotes,
-    }),
+    },
+    token: activeToken,
+    authRequired: true,
   });
-
-  if (response.status === 401 || response.status === 403) {
-    clearAccessTokenCache();
-    throw createAuthRequiredError("create a rental booking");
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(
-      payload?.message || `Booking request failed with status ${response.status}.`
-    );
-  }
-
-  return payload;
 }

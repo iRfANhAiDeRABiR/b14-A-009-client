@@ -1,15 +1,16 @@
 import { Suspense } from "react";
-import { DashboardRouteSkeleton } from "@/components/auth/AuthSkeletons";
-import { DashboardIndexClient } from "@/components/auth/RoleDashboardRoute";
+import { DashboardIndexGuard } from "@/components/dashboard/DashboardIndexGuard";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 
 export const metadata = {
   title: "Dashboard",
+  description: "GearNest role-aware account workspace router.",
 };
 
 export default function DashboardIndexPage() {
   return (
-    <Suspense fallback={<DashboardRouteSkeleton />}>
-      <DashboardIndexClient />
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardIndexGuard />
     </Suspense>
   );
 }

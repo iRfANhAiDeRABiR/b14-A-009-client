@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Skeleton } from "@/components/ui/Skeleton";
 
@@ -21,23 +20,6 @@ export function AuthPageSkeleton() {
             </div>
           </div>
         </div>
-      </Container>
-    </section>
-  );
-}
-
-export function DashboardRouteSkeleton() {
-  return (
-    <section className="py-14 sm:py-20">
-      <Container size="md">
-        <Card padding="lg" className="space-y-4 rounded-2xl">
-          <Skeleton className="h-6 w-36 rounded-full" />
-          <Skeleton variant="text" className="h-9 w-64" />
-          <div className="grid gap-4 pt-2 sm:grid-cols-2">
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-          </div>
-        </Card>
       </Container>
     </section>
   );

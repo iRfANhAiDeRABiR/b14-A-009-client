@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { subscribeAuthFailures } from "@/lib/apiClient";
 import { authClient, isAuthBackendConfigured } from "@/lib/auth-client";
 import {
   getDashboardHomeByRole,
@@ -23,28 +24,77 @@ import {
 
 export const AuthContext = React.createContext(null);
 
+export const AUTH_STATUS = {
+  LOADING: "loading",
+  AUTHENTICATED: "authenticated",
+  UNAUTHENTICATED: "unauthenticated",
+  EXPIRED: "expired",
+  ERROR: "error",
+};
+
 export function AuthProvider({ children }) {
   const sessionState = authClient.useSession();
 
   const rawUser = sessionState.data?.user ?? null;
   const session = sessionState.data?.session ?? null;
-  const isAuthenticated = Boolean(rawUser && session);
+  const hasActiveSession = Boolean(rawUser && session);
   const isLoading = Boolean(sessionState.isPending);
   const isRefetching = Boolean(sessionState.isRefetching);
 
-  const sessionIdentityKey = isAuthenticated
-    ? String(session?.id || rawUser?.id || rawUser?.email || "active")
-    : "";
-
+  const [expiredSessionKey, setExpiredSessionKey] = React.useState("");
   const [tokenState, setTokenState] = React.useState({
     sessionKey: "",
     token: null,
   });
 
+  const sessionIdentityKey = hasActiveSession
+    ? String(session?.id || rawUser?.id || rawUser?.email || "active")
+    : "";
+  const sessionExpiresAt = session?.expiresAt ?? null;
+
+  const isSessionExpired = Boolean(
+    expiredSessionKey &&
+      (expiredSessionKey === sessionIdentityKey || expiredSessionKey === "forced")
+  );
+  const isAuthenticated = hasActiveSession && !isSessionExpired;
+
+  // Watch session expiration boundary automatically while session stays open.
+  React.useEffect(() => {
+    if (!hasActiveSession || !sessionExpiresAt) {
+      return undefined;
+    }
+
+    const expMs = new Date(sessionExpiresAt).getTime();
+    if (!Number.isFinite(expMs)) return undefined;
+
+    const remainingMs = expMs - Date.now();
+    if (remainingMs > 2_147_483_647) return undefined;
+
+    const timer = setTimeout(() => {
+      clearAccessTokenCache();
+      setExpiredSessionKey(sessionIdentityKey || "forced");
+    }, Math.max(0, remainingMs + 250));
+
+    return () => clearTimeout(timer);
+  }, [hasActiveSession, sessionExpiresAt, sessionIdentityKey]);
+
+  // Listen to 401 session-expired signals from protected Express API requests.
+  React.useEffect(() => {
+    return subscribeAuthFailures((event) => {
+      if (event?.type === "session_expired") {
+        setTokenState({ sessionKey: "", token: null });
+        setExpiredSessionKey("forced");
+        if (typeof sessionState.refetch === "function") {
+          sessionState.refetch().catch(() => null);
+        }
+      }
+    });
+  }, [sessionState]);
+
   React.useEffect(() => {
     let active = true;
 
-    if (!sessionIdentityKey) {
+    if (!sessionIdentityKey || isSessionExpired) {
       clearAccessTokenCache();
       return () => {
         active = false;
@@ -62,16 +112,26 @@ export function AuthProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [sessionIdentityKey]);
+  }, [isSessionExpired, sessionIdentityKey]);
+
+  const authStatus = React.useMemo(() => {
+    if (isLoading) return AUTH_STATUS.LOADING;
+    if (isSessionExpired) return AUTH_STATUS.EXPIRED;
+    if (isAuthenticated) return AUTH_STATUS.AUTHENTICATED;
+    if (sessionState.error) return AUTH_STATUS.ERROR;
+    return AUTH_STATUS.UNAUTHENTICATED;
+  }, [isAuthenticated, isLoading, isSessionExpired, sessionState.error]);
 
   const token =
-    sessionIdentityKey && tokenState.sessionKey === sessionIdentityKey
+    isAuthenticated &&
+    sessionIdentityKey &&
+    tokenState.sessionKey === sessionIdentityKey
       ? tokenState.token
       : null;
 
   const role = React.useMemo(
-    () => (rawUser ? normalizeUserRole(rawUser.role) : null),
-    [rawUser]
+    () => (rawUser && isAuthenticated ? normalizeUserRole(rawUser.role) : null),
+    [isAuthenticated, rawUser]
   );
 
   const user = React.useMemo(() => {
@@ -107,27 +167,37 @@ export function AuthProvider({ children }) {
     [isAuthenticated, sessionIdentityKey]
   );
 
-  const login = React.useCallback(async (credentials) => {
-    const result = await loginWithEmail(credentials);
-    if (typeof sessionState.refetch === "function") {
-      await sessionState.refetch().catch(() => null);
-    }
-    return result;
-  }, [sessionState]);
+  const login = React.useCallback(
+    async (credentials) => {
+      setExpiredSessionKey("");
+      const result = await loginWithEmail(credentials);
+      if (typeof sessionState.refetch === "function") {
+        await sessionState.refetch().catch(() => null);
+      }
+      return result;
+    },
+    [sessionState]
+  );
 
-  const register = React.useCallback(async (payload) => {
-    const result = await registerWithEmail(payload);
-    if (typeof sessionState.refetch === "function") {
-      await sessionState.refetch().catch(() => null);
-    }
-    return result;
-  }, [sessionState]);
+  const register = React.useCallback(
+    async (payload) => {
+      setExpiredSessionKey("");
+      const result = await registerWithEmail(payload);
+      if (typeof sessionState.refetch === "function") {
+        await sessionState.refetch().catch(() => null);
+      }
+      return result;
+    },
+    [sessionState]
+  );
 
   const startGoogleLogin = React.useCallback(async (options) => {
+    setExpiredSessionKey("");
     return loginWithGoogle(options);
   }, []);
 
   const logout = React.useCallback(async () => {
+    setExpiredSessionKey("");
     try {
       await logoutUser();
     } finally {
@@ -139,6 +209,7 @@ export function AuthProvider({ children }) {
   }, [sessionState]);
 
   const refresh = React.useCallback(async () => {
+    setExpiredSessionKey("");
     const data = await refreshAuthSession();
     if (typeof sessionState.refetch === "function") {
       await sessionState.refetch().catch(() => null);
@@ -149,13 +220,15 @@ export function AuthProvider({ children }) {
   const value = React.useMemo(
     () => ({
       user,
-      session,
+      session: isAuthenticated ? session : null,
       role,
       roleLabel,
       roleBadgeVariant,
       dashboardHref,
       roleNavLinks,
       token,
+      authStatus,
+      isSessionExpired,
       isAuthenticated,
       isLoading,
       isRefetching,
@@ -168,13 +241,16 @@ export function AuthProvider({ children }) {
       loginWithGoogle: startGoogleLogin,
       logout,
       refreshSession: refresh,
+      retrySession: refresh,
     }),
     [
+      authStatus,
       dashboardHref,
       getToken,
       isAuthenticated,
       isLoading,
       isRefetching,
+      isSessionExpired,
       login,
       logout,
       refresh,

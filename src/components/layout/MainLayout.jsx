@@ -1,6 +1,8 @@
 import { Suspense } from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import {
+  PublicFooterSlot,
+  PublicNavbarSlot,
+} from "@/components/layout/ChromeSlots";
 import { AuthProvider } from "@/context/AuthProvider";
 import { ToastProvider } from "@/context/ToastContext";
 
@@ -19,12 +21,14 @@ export function MainLayout({ children }) {
       <AuthProvider>
         <div className="flex min-h-dvh flex-col bg-background text-foreground">
           <Suspense fallback={<NavbarFallback />}>
-            <Navbar />
+            <PublicNavbarSlot />
           </Suspense>
           <main id="main-content" className="flex-1">
             {children}
           </main>
-          <Footer />
+          <Suspense fallback={null}>
+            <PublicFooterSlot />
+          </Suspense>
         </div>
       </AuthProvider>
     </ToastProvider>

@@ -192,13 +192,13 @@ export async function loginWithGoogle({ redirectTo = "/" } = {}) {
   assertBackendReady();
   clearAccessTokenCache();
 
-  const safePath = sanitizeRedirectPath(redirectTo, "/");
+  const safePath = sanitizeRedirectPath(redirectTo, "/dashboard");
   const origin =
     typeof window !== "undefined" ? window.location.origin : "";
   const callbackURL = origin ? `${origin}${safePath}` : safePath;
   const errorParams = new URLSearchParams({
     authError: "google_oauth_failed",
-    ...(safePath !== "/" ? { redirectTo: safePath } : {}),
+    ...(safePath !== "/dashboard" ? { callbackURL: safePath } : {}),
   });
   const errorCallbackURL = origin
     ? `${origin}/login?${errorParams.toString()}`

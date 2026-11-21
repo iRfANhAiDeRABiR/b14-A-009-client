@@ -1,4 +1,5 @@
-import { clearAccessTokenCache, getAccessToken } from "@/lib/token-provider";
+import { ApiError, apiRequest } from "@/lib/apiClient";
+import { getAccessToken } from "@/lib/token-provider";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   /\/+$/,
@@ -6,20 +7,18 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
 );
 
 function createUnauthorizedError() {
-  const err = new Error(
-    "Sign in is required to manage favorites. Please log in to continue."
+  return new ApiError(
+    "Sign in is required to manage favorites. Please log in to continue.",
+    { status: 401, code: "UNAUTHORIZED", requiresAuth: true }
   );
-  err.code = "UNAUTHORIZED";
-  return err;
 }
 
 function createServiceUnavailableError(message) {
-  const err = new Error(
+  return new ApiError(
     message ||
-      "Favorites service is not connected yet. Connect the Express backend to persist favorites in MongoDB."
+      "Favorites service is not connected yet. Connect the Express backend to persist favorites in MongoDB.",
+    { status: 503, code: "SERVICE_UNAVAILABLE" }
   );
-  err.code = "SERVICE_UNAVAILABLE";
-  return err;
 }
 
 /**
@@ -45,29 +44,12 @@ export async function getFavorites({ token } = {}) {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/favorites`, {
+    const json = await apiRequest("/api/favorites", {
       method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${activeToken}`,
-      },
-      cache: "no-store",
+      token: activeToken,
+      authRequired: true,
     });
 
-    if (response.status === 401 || response.status === 403) {
-      clearAccessTokenCache();
-      return {
-        items: [],
-        error: "Session expired or unauthorized. Please sign in again.",
-        requiresAuth: true,
-      };
-    }
-
-    if (!response.ok) {
-      throw new Error(`Favorites API responded with status ${response.status}`);
-    }
-
-    const json = await response.json();
     const list = Array.isArray(json)
       ? json
       : Array.isArray(json?.data)
@@ -82,6 +64,14 @@ export async function getFavorites({ token } = {}) {
       requiresAuth: false,
     };
   } catch (error) {
+    if (error instanceof ApiError && error.requiresAuth) {
+      return {
+        items: [],
+        error: "Session expired or unauthorized. Please sign in again.",
+        requiresAuth: true,
+      };
+    }
+
     return {
       items: [],
       error:
@@ -106,29 +96,12 @@ export async function addFavorite({ equipmentId, token } = {}) {
     throw createServiceUnavailableError();
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/favorites`, {
+  return apiRequest("/api/favorites", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${activeToken}`,
-    },
-    body: JSON.stringify({ equipmentId }),
+    body: { equipmentId },
+    token: activeToken,
+    authRequired: true,
   });
-
-  if (response.status === 401 || response.status === 403) {
-    clearAccessTokenCache();
-    throw createUnauthorizedError();
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(
-      payload?.message || `Failed to save favorite (status ${response.status}).`
-    );
-  }
-
-  return payload;
 }
 
 /**
@@ -144,29 +117,9 @@ export async function removeFavorite({ equipmentId, token } = {}) {
     throw createServiceUnavailableError();
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/favorites/${encodeURIComponent(equipmentId)}`,
-    {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${activeToken}`,
-      },
-    }
-  );
-
-  if (response.status === 401 || response.status === 403) {
-    clearAccessTokenCache();
-    throw createUnauthorizedError();
-  }
-
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(
-      payload?.message ||
-        `Failed to remove favorite (status ${response.status}).`
-    );
-  }
-
-  return payload;
+  return apiRequest(`/api/favorites/${encodeURIComponent(equipmentId)}`, {
+    method: "DELETE",
+    token: activeToken,
+    authRequired: true,
+  });
 }

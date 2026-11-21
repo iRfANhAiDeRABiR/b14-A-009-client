@@ -83,7 +83,8 @@ export function isSafeRedirectPath(target) {
 }
 
 export function sanitizeRedirectPath(target, fallback = "/") {
-  const safeFallback = isSafeRedirectPath(fallback) ? fallback : "/";
+  const safeFallback =
+    fallback === "" ? "" : isSafeRedirectPath(fallback) ? fallback : "/";
   if (!isSafeRedirectPath(target)) {
     return safeFallback;
   }
@@ -103,10 +104,32 @@ export function sanitizeRedirectPath(target, fallback = "/") {
   return trimmed;
 }
 
-export function buildLoginRedirectUrl(destinationPath = "/") {
-  const safePath = sanitizeRedirectPath(destinationPath, "/");
-  if (safePath === "/") {
-    return "/login";
+export function getCallbackPathFromSearchParams(searchParams) {
+  if (!searchParams) return "";
+  if (typeof searchParams.get === "function") {
+    return (
+      searchParams.get("callbackURL") ||
+      searchParams.get("redirectTo") ||
+      ""
+    );
   }
-  return `/login?redirectTo=${encodeURIComponent(safePath)}`;
+  return searchParams.callbackURL || searchParams.redirectTo || "";
+}
+
+export function buildLoginRedirectUrl(
+  destinationPath = "/",
+  { reason = "" } = {}
+) {
+  const safePath = sanitizeRedirectPath(destinationPath, "/");
+  const params = new URLSearchParams();
+
+  if (safePath !== "/") {
+    params.set("callbackURL", safePath);
+  }
+  if (reason) {
+    params.set("reason", String(reason));
+  }
+
+  const query = params.toString();
+  return query ? `/login?${query}` : "/login";
 }

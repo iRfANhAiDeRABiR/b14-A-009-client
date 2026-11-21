@@ -1,3 +1,5 @@
+import { sanitizeRedirectPath } from "./authValidation.js";
+
 export const USER_ROLES = {
   CUSTOMER: "customer",
   OWNER: "owner",
@@ -22,83 +24,110 @@ export const ROLE_DASHBOARD_HOME = {
   [USER_ROLES.ADMIN]: "/dashboard/admin",
 };
 
+export const BACK_TO_MARKETPLACE_ITEM = {
+  label: "Back to Marketplace",
+  href: "/",
+  icon: "marketplace",
+  description: "Return to public GearNest catalog and homepage",
+};
+
+export const CUSTOMER_SIDEBAR_ITEMS = [
+  {
+    label: "Overview",
+    href: "/dashboard/customer",
+    icon: "overview",
+    description: "Summary of rentals, favorites, and customer profile",
+  },
+  {
+    label: "My Rentals",
+    href: "/dashboard/customer/my-rentals",
+    icon: "rentals",
+    description: "Track pending payments, active bookings, and rental history",
+  },
+  {
+    label: "Favorites",
+    href: "/dashboard/customer/favorites",
+    icon: "favorites",
+    description: "View and book equipment saved in your account",
+  },
+  {
+    label: "My Profile",
+    href: "/dashboard/customer/profile",
+    icon: "profile",
+    description: "Account identity, avatar, and verified contact settings",
+  },
+];
+
+export const OWNER_SIDEBAR_ITEMS = [
+  {
+    label: "Overview",
+    href: "/dashboard/owner",
+    icon: "overview",
+    description: "Fleet listings summary, approvals, and rental demand",
+  },
+  {
+    label: "Add Equipment",
+    href: "/dashboard/owner/add-equipment",
+    icon: "add",
+    description: "Submit new machinery or production gear for marketplace review",
+  },
+  {
+    label: "My Equipment",
+    href: "/dashboard/owner/my-equipment",
+    icon: "equipment",
+    description: "Manage specs, daily rates, and inventory availability",
+  },
+  {
+    label: "My Equipment Rental",
+    href: "/dashboard/owner/rentals",
+    icon: "rentals",
+    description: "Review active customer bookings and delivery schedules",
+  },
+  {
+    label: "My Profile",
+    href: "/dashboard/owner/profile",
+    icon: "profile",
+    description: "Manage owner display profile and dispatch details",
+  },
+];
+
+export const ADMIN_SIDEBAR_ITEMS = [
+  {
+    label: "Overview",
+    href: "/dashboard/admin",
+    icon: "overview",
+    description: "Marketplace moderation overview and administrative workspace",
+  },
+  {
+    label: "All Users",
+    href: "/dashboard/admin/users",
+    icon: "users",
+    description: "Audit registered accounts and assign marketplace roles",
+  },
+  {
+    label: "All Equipment",
+    href: "/dashboard/admin/equipment",
+    icon: "equipment",
+    description: "Approve, reject, or inspect submitted equipment listings",
+  },
+  {
+    label: "All Rentals",
+    href: "/dashboard/admin/rentals",
+    icon: "rentals",
+    description: "Monitor platform bookings, statuses, and settlements",
+  },
+  {
+    label: "My Profile",
+    href: "/dashboard/admin/profile",
+    icon: "profile",
+    description: "Administrator session identity and profile details",
+  },
+];
+
 export const ROLE_NAV_LINKS = {
-  [USER_ROLES.CUSTOMER]: [
-    {
-      label: "Customer Dashboard",
-      href: "/dashboard/customer",
-      description: "Overview of active rentals and account activity",
-    },
-    {
-      label: "My Rentals",
-      href: "/dashboard/customer/rentals",
-      description: "Track pending payments, active bookings, and past hires",
-    },
-    {
-      label: "Favorites",
-      href: "/dashboard/customer/favorites",
-      description: "Saved equipment ready for quick booking",
-    },
-    {
-      label: "Profile",
-      href: "/dashboard/customer/profile",
-      description: "Account identity, photo, and contact details",
-    },
-  ],
-  [USER_ROLES.OWNER]: [
-    {
-      label: "Owner Dashboard",
-      href: "/dashboard/owner",
-      description: "Inventory status, rental volume, and earnings overview",
-    },
-    {
-      label: "Add Equipment",
-      href: "/dashboard/owner/add-equipment",
-      description: "Publish a new machine or gear listing for approval",
-    },
-    {
-      label: "My Equipment",
-      href: "/dashboard/owner/my-equipment",
-      description: "Edit specs, quantities, and pricing across your fleet",
-    },
-    {
-      label: "My Equipment Rental",
-      href: "/dashboard/owner/rentals",
-      description: "Monitor incoming customer reservations and schedules",
-    },
-    {
-      label: "My Profile",
-      href: "/dashboard/owner/profile",
-      description: "Manage owner display identity and contact details",
-    },
-  ],
-  [USER_ROLES.ADMIN]: [
-    {
-      label: "Admin Dashboard",
-      href: "/dashboard/admin",
-      description: "Platform analytics, moderation queue, and KPI summary",
-    },
-    {
-      label: "All Users",
-      href: "/dashboard/admin/users",
-      description: "Review accounts and manage Customer, Owner, or Admin roles",
-    },
-    {
-      label: "All Equipment",
-      href: "/dashboard/admin/equipment",
-      description: "Approve, reject, or audit marketplace equipment listings",
-    },
-    {
-      label: "All Rentals",
-      href: "/dashboard/admin/rentals",
-      description: "Inspect platform-wide bookings and settlement statuses",
-    },
-    {
-      label: "My Profile",
-      href: "/dashboard/admin/profile",
-      description: "Administrator profile and session overview",
-    },
-  ],
+  [USER_ROLES.CUSTOMER]: CUSTOMER_SIDEBAR_ITEMS,
+  [USER_ROLES.OWNER]: OWNER_SIDEBAR_ITEMS,
+  [USER_ROLES.ADMIN]: ADMIN_SIDEBAR_ITEMS,
 };
 
 export function normalizeUserRole(rawRole) {
@@ -121,7 +150,10 @@ export function getDashboardHomeByRole(role) {
 }
 
 export function getRoleNavLinks(role) {
-  return ROLE_NAV_LINKS[normalizeUserRole(role)] || ROLE_NAV_LINKS[USER_ROLES.CUSTOMER];
+  return (
+    ROLE_NAV_LINKS[normalizeUserRole(role)] ||
+    ROLE_NAV_LINKS[USER_ROLES.CUSTOMER]
+  );
 }
 
 export function isRoleAllowed(userRole, allowedRoles) {
@@ -135,17 +167,98 @@ export function isRoleAllowed(userRole, allowedRoles) {
 }
 
 export function isRoleAuthorizedForPath(userRole, pathname) {
-  const path = String(pathname || "");
+  const cleanPath = String(pathname || "").split("?")[0];
   const normalized = normalizeUserRole(userRole);
 
-  if (path.startsWith("/dashboard/admin")) {
+  if (cleanPath === "/dashboard/admin" || cleanPath.startsWith("/dashboard/admin/")) {
     return normalized === USER_ROLES.ADMIN;
   }
-  if (path.startsWith("/dashboard/owner")) {
+  if (cleanPath === "/dashboard/owner" || cleanPath.startsWith("/dashboard/owner/")) {
     return normalized === USER_ROLES.OWNER;
   }
-  if (path.startsWith("/dashboard/customer")) {
+  if (
+    cleanPath === "/dashboard/customer" ||
+    cleanPath.startsWith("/dashboard/customer/")
+  ) {
     return normalized === USER_ROLES.CUSTOMER;
   }
   return true;
+}
+
+/**
+ * Resolve where an authenticated user should go after login or registration:
+ * 1. Validate callbackURL as a safe internal path (blocking open redirects & /login loops).
+ * 2. If callbackURL points to another role's dashboard, redirect to user's own dashboard.
+ * 3. Otherwise follow valid authorized callbackURL, or default to user's role dashboard.
+ */
+export function resolvePostLoginRedirect(callbackURL, userRole) {
+  const defaultDashboard = getDashboardHomeByRole(userRole);
+  const safePath = sanitizeRedirectPath(callbackURL, "");
+
+  if (!safePath || safePath === "/") {
+    return defaultDashboard;
+  }
+
+  const basePath = safePath.split("?")[0];
+  if (basePath === "/dashboard" || basePath === "/dashboard/") {
+    return defaultDashboard;
+  }
+
+  if (basePath.startsWith("/dashboard/")) {
+    return isRoleAuthorizedForPath(userRole, basePath)
+      ? safePath
+      : defaultDashboard;
+  }
+
+  return safePath;
+}
+
+const SEGMENT_LABELS = {
+  dashboard: "Dashboard",
+  customer: "Customer",
+  owner: "Owner",
+  admin: "Admin",
+  "my-rentals": "My Rentals",
+  favorites: "Favorites",
+  profile: "My Profile",
+  "add-equipment": "Add Equipment",
+  "my-equipment": "My Equipment",
+  rentals: "Rentals",
+  users: "All Users",
+  equipment: "All Equipment",
+};
+
+export function getDashboardBreadcrumbs(pathname = "/dashboard", role = null) {
+  const cleanPath = String(pathname || "/dashboard").split("?")[0];
+  const segments = cleanPath.split("/").filter(Boolean);
+
+  if (segments.length <= 1) {
+    return [{ label: "Dashboard", href: "/dashboard", current: true }];
+  }
+
+  const normalizedRole = role ? normalizeUserRole(role) : null;
+  const crumbs = [];
+  let acc = "";
+
+  segments.forEach((segment, index) => {
+    acc += `/${segment}`;
+    const isLast = index === segments.length - 1;
+    let label =
+      SEGMENT_LABELS[segment] ||
+      segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+    if (segment === "rentals" && normalizedRole === USER_ROLES.OWNER) {
+      label = "My Equipment Rental";
+    } else if (segment === "rentals" && normalizedRole === USER_ROLES.ADMIN) {
+      label = "All Rentals";
+    }
+
+    crumbs.push({
+      label,
+      href: acc,
+      current: isLast,
+    });
+  });
+
+  return crumbs;
 }
