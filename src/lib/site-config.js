@@ -4,10 +4,47 @@ export const SITE_CONFIG = {
   description:
     "Connect with verified local equipment owners to rent construction machinery, cinema optics, field vehicles, and event systems with transparent pricing and insured checkout.",
   navLinks: [
-    { label: "Home", href: "#top" },
-    { label: "Equipment", href: "#marketplace-preview" },
-    { label: "How It Works", href: "#marketplace-preview" },
-    { label: "List Your Gear", href: "#list-equipment" },
+    { label: "Home", href: "/" },
+    { label: "All Equipment", href: "/equipment" },
+    { label: "How It Works", href: "/how-it-works" },
+    { label: "About Us", href: "/about" },
+    { label: "Contact", href: "/contact" },
+  ],
+  authLinks: {
+    login: { label: "Login", href: "/login" },
+    register: { label: "Register", href: "/register" },
+    dashboard: { label: "Dashboard", href: "/dashboard" },
+  },
+  footerColumns: [
+    {
+      title: "Quick Links",
+      links: [
+        { label: "Home", href: "/" },
+        { label: "All Equipment", href: "/equipment" },
+        { label: "About Us", href: "/about" },
+        { label: "How It Works", href: "/how-it-works" },
+      ],
+    },
+    {
+      title: "Categories",
+      links: [
+        { label: "Construction Equipment", href: "/equipment?category=construction" },
+        { label: "Photography Equipment", href: "/equipment?category=photography" },
+        { label: "Agriculture Equipment", href: "/equipment?category=agriculture" },
+        { label: "Vehicles & Transportation", href: "/equipment?category=vehicles" },
+        { label: "Electronics", href: "/equipment?category=electronics" },
+        { label: "Event Equipment", href: "/equipment?category=event" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "Contact Us", href: "/contact" },
+        { label: "Help Center", href: "/help-center" },
+        { label: "Terms & Conditions", href: "/terms" },
+        { label: "Privacy Policy", href: "/privacy" },
+      ],
+    },
   ],
   equipmentHighlights: [
     {

@@ -64,7 +64,7 @@ export function HeroSection() {
               {...enterProps(0.18)}
               className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
             >
-              <Button href="#marketplace-preview" variant="primary" size="lg">
+              <Button href="/equipment" variant="primary" size="lg">
                 <span>Explore Equipment</span>
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Button>
@@ -231,7 +231,7 @@ export function HeroSection() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Button href="#marketplace-preview" variant="inverted" size="lg">
+              <Button href="/equipment" variant="inverted" size="lg">
                 <span>Explore Marketplace</span>
                 <ArrowRight aria-hidden="true" className="size-4" />
               </Button>

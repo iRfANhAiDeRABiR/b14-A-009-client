@@ -1,4 +1,5 @@
 import { Inter, Manrope } from "next/font/google";
+import { MainLayout } from "@/components/layout/MainLayout";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -33,14 +34,14 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${manrope.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground selection:bg-primary selection:text-primary-foreground">
+      <body className="min-h-dvh bg-background font-sans text-foreground selection:bg-primary selection:text-primary-foreground">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-md"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-primary-foreground focus:shadow-md"
         >
           Skip to main content
         </a>
-        {children}
+        <MainLayout>{children}</MainLayout>
       </body>
     </html>
   );
