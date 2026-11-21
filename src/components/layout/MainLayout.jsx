@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ToastProvider } from "@/context/ToastContext";
 
 function NavbarFallback() {
   return (
@@ -13,14 +14,16 @@ function NavbarFallback() {
 
 export function MainLayout({ children }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-background text-foreground">
-      <Suspense fallback={<NavbarFallback />}>
-        <Navbar />
-      </Suspense>
-      <main id="main-content" className="flex-1">
-        {children}
-      </main>
-      <Footer />
-    </div>
+    <ToastProvider>
+      <div className="flex min-h-dvh flex-col bg-background text-foreground">
+        <Suspense fallback={<NavbarFallback />}>
+          <Navbar />
+        </Suspense>
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    </ToastProvider>
   );
 }

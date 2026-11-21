@@ -9,6 +9,48 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
   ""
 );
 
+function isApprovedEquipment(item) {
+  return !item?.status || String(item.status).toLowerCase() === "approved";
+}
+
+function normalizeEquipmentItem(item) {
+  if (!item || typeof item !== "object") return null;
+  if (!isApprovedEquipment(item)) return null;
+
+  const images =
+    Array.isArray(item.images) && item.images.length > 0
+      ? item.images.filter(Boolean)
+      : item.image
+        ? [item.image]
+        : [];
+
+  return {
+    ...item,
+    _id: item._id || item.id,
+    image: item.image || images[0] || "/images/hero-equipment.jpg",
+    images: images.length > 0 ? images : ["/images/hero-equipment.jpg"],
+    availableQuantity:
+      typeof item.availableQuantity === "number"
+        ? item.availableQuantity
+        : Number(item.availableQuantity) || 0,
+    rentalPrice:
+      typeof item.rentalPrice === "number"
+        ? item.rentalPrice
+        : Number(item.rentalPrice) || 0,
+    rentalType: item.rentalType || "Daily",
+    rentalTerms:
+      item.rentalTerms ||
+      item.terms ||
+      "Standard GearNest equipment inspection, safe operation, and timely return terms apply.",
+    owner: item.owner || {
+      name: item.ownerName || "GearNest Equipment Owner",
+      photo: item.ownerPhoto || "",
+      locationLabel: item.location || "",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+  };
+}
+
 function normalizeEquipmentList(payload) {
   const list = Array.isArray(payload)
     ? payload
@@ -18,9 +60,7 @@ function normalizeEquipmentList(payload) {
         ? payload.equipment
         : [];
 
-  return list.filter(
-    (item) => !item?.status || String(item.status).toLowerCase() === "approved"
-  );
+  return list.map(normalizeEquipmentItem).filter(Boolean);
 }
 
 async function fetchEquipmentEndpoint(path, fallbackItems, limit) {
@@ -84,9 +124,7 @@ function queryDemoEquipment(filters = {}) {
   const page = Math.max(1, Number(filters.page) || 1);
   const limit = Math.max(1, Number(filters.limit) || 9);
 
-  let filtered = DEMO_CATALOG_EQUIPMENT.filter(
-    (item) => String(item.status).toLowerCase() === "approved"
-  );
+  let filtered = DEMO_CATALOG_EQUIPMENT.filter(isApprovedEquipment);
 
   if (search) {
     filtered = filtered.filter((item) => {
@@ -141,8 +179,8 @@ function queryDemoEquipment(filters = {}) {
         new Date(a.createdAt || 0).getTime()
       );
     }
-    // featured: featured items first, then newest
-    const featuredDelta = Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+    const featuredDelta =
+      Number(Boolean(b.featured)) - Number(Boolean(a.featured));
     if (featuredDelta !== 0) return featuredDelta;
     return (
       new Date(b.createdAt || 0).getTime() -
@@ -166,6 +204,81 @@ function queryDemoEquipment(filters = {}) {
       totalPages,
     },
   };
+}
+
+/**
+ * Fetch a single approved equipment record by ID:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/equipment/:id
+ */
+export async function getEquipmentById(id, { token } = {}) {
+  const cleanId = decodeURIComponent(String(id || "")).trim();
+  if (!cleanId) {
+    return { item: null, notFound: true, source: "demo", error: null };
+  }
+
+  const fallbackMatch = normalizeEquipmentItem(
+    DEMO_CATALOG_EQUIPMENT.find(
+      (entry) => String(entry._id || entry.id) === cleanId
+    )
+  );
+
+  if (!API_BASE_URL) {
+    return {
+      item: fallbackMatch,
+      notFound: !fallbackMatch,
+      source: "demo",
+      error: null,
+    };
+  }
+
+  try {
+    const headers = { Accept: "application/json" };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/equipment/${encodeURIComponent(cleanId)}`,
+      {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      }
+    );
+
+    if (response.status === 404) {
+      return { item: null, notFound: true, source: "api", error: null };
+    }
+
+    if (!response.ok) {
+      throw new Error(`Equipment API responded with status ${response.status}`);
+    }
+
+    const json = await response.json();
+    const rawItem = json?.data || json?.equipment || json;
+    const item = normalizeEquipmentItem(rawItem);
+
+    if (!item) {
+      return { item: null, notFound: true, source: "api", error: null };
+    }
+
+    return {
+      item,
+      notFound: false,
+      source: "api",
+      error: null,
+    };
+  } catch (error) {
+    return {
+      item: fallbackMatch,
+      notFound: !fallbackMatch,
+      source: "demo",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to load equipment details from server.",
+    };
+  }
 }
 
 /**

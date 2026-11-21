@@ -8,6 +8,8 @@ export const DEMO_FEATURED_EQUIPMENT = [
   {
     _id: "demo-eq-01",
     name: "Mini Excavator",
+    description:
+      "Compact hydraulic crawler mini excavator engineered for residential trenching, utility lines, footing excavation, and tight urban job sites. Smooth pilot controls, rubber tracks, and an enclosed climate cab deliver productive digging with minimal ground disturbance.",
     category: "Construction Equipment",
     rentalPrice: 245,
     rentalType: "Daily",
@@ -16,15 +18,40 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "Kubota Pro Series",
+    model: "KX040-4",
+    condition: "Excellent",
     createdAt: "2026-11-10T09:00:00.000Z",
     image: "/images/equipment/mini-excavator.jpg",
+    images: [
+      "/images/equipment/mini-excavator.jpg",
+      "/images/hero-excavator.jpg",
+      "/images/equipment/diesel-generator.jpg",
+    ],
     imageAlt:
       "Compact hydraulic mini excavator parked on gravel at a residential construction site",
+    specifications: [
+      { label: "Operating Weight", value: "4,200 kg" },
+      { label: "Max Dig Depth", value: "3.4 m" },
+      { label: "Bucket Capacity", value: "0.14 m³" },
+      { label: "Track Type", value: "Heavy-Duty Rubber" },
+    ],
+    owner: {
+      name: "Apex Site Fleet",
+      photo: "",
+      locationLabel: "Austin, TX",
+      memberSince: "2024",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Equipment must be operated on stable terrain by a qualified operator. Return with full diesel tank and clean undercarriage. Any accidental site damage or schedule extension must be reported prior to the rental end date.",
     isDemo: true,
   },
   {
     _id: "demo-eq-02",
     name: "Professional Mirrorless Camera",
+    description:
+      "Full-frame 4K/6K cinema-ready mirrorless camera paired with a constant f/2.8 24-70mm zoom lens and carbon-fiber tripod head. Ideal for commercial shoots, documentaries, weddings, and studio productions requiring clean low-light performance.",
     category: "Photography Equipment",
     rentalPrice: 95,
     rentalType: "Daily",
@@ -33,15 +60,39 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "CineFrame",
+    model: "FX-Pro Mk II",
+    condition: "Like New",
     createdAt: "2026-11-11T10:30:00.000Z",
     image: "/images/equipment/mirrorless-camera.jpg",
+    images: [
+      "/images/equipment/mirrorless-camera.jpg",
+      "/images/hero-equipment.jpg",
+    ],
     imageAlt:
       "Full-frame mirrorless cinema camera with 24-70mm lens mounted on a carbon tripod head",
+    specifications: [
+      { label: "Sensor Format", value: "Full-Frame CMOS" },
+      { label: "Video Output", value: "4K 120fps 10-bit" },
+      { label: "Included Optics", value: "24-70mm f/2.8 Pro" },
+      { label: "Support", value: "Carbon Fluid Head Tripod" },
+    ],
+    owner: {
+      name: "Northline Media Gear",
+      photo: "",
+      locationLabel: "Brooklyn, NY",
+      memberSince: "2025",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Includes hard weather-sealed transport case, two charged batteries, and dual charger. Lenses must remain capped during transit. No exposure to heavy rain or salt spray without protective housing.",
     isDemo: true,
   },
   {
     _id: "demo-eq-03",
     name: "Agricultural Tractor",
+    description:
+      "Versatile 4WD utility agricultural tractor equipped with a quick-attach front loader bucket and rear PTO. Designed for soil grading, hay hauling, orchard maintenance, and seasonal field preparation across small to mid-sized farms.",
     category: "Agriculture Equipment",
     rentalPrice: 780,
     rentalType: "Weekly",
@@ -50,15 +101,39 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "AgriForce",
+    model: "UT-75L",
+    condition: "Excellent",
     createdAt: "2026-11-12T08:15:00.000Z",
     image: "/images/equipment/agricultural-tractor.jpg",
+    images: [
+      "/images/equipment/agricultural-tractor.jpg",
+      "/images/equipment/mini-excavator.jpg",
+    ],
     imageAlt:
       "Utility agricultural tractor with front loader standing in an open green farmland field",
+    specifications: [
+      { label: "Engine Output", value: "75 HP Turbo Diesel" },
+      { label: "Drive System", value: "4WD Hydrostatic" },
+      { label: "Loader Lift", value: "1,450 kg" },
+      { label: "Rear PTO", value: "540 / 1000 RPM" },
+    ],
+    owner: {
+      name: "Valley Agro Rentals",
+      photo: "",
+      locationLabel: "Fresno, CA",
+      memberSince: "2023",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Weekly rentals cover up to 45 operating hours. Tractor is delivered inspected and greased; renter is responsible for daily fluid checks and refueling prior to return pickup.",
     isDemo: true,
   },
   {
     _id: "demo-eq-04",
     name: "Diesel Generator",
+    description:
+      "Sound-attenuated canopy diesel power generator delivering stable three-phase and single-phase output for construction trailers, outdoor events, and backup job-site power. Engineered for continuous heavy-duty operation with low acoustic footprint.",
     category: "Construction Equipment",
     rentalPrice: 165,
     rentalType: "Daily",
@@ -67,15 +142,39 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "VoltCore Industrial",
+    model: "DG-45S",
+    condition: "Excellent",
     createdAt: "2026-11-13T11:45:00.000Z",
     image: "/images/equipment/diesel-generator.jpg",
+    images: [
+      "/images/equipment/diesel-generator.jpg",
+      "/images/equipment/air-compressor.jpg",
+    ],
     imageAlt:
       "Heavy-duty enclosed silent diesel power generator positioned on a concrete site pad",
+    specifications: [
+      { label: "Rated Output", value: "45 kVA / 36 kW" },
+      { label: "Acoustic Level", value: "64 dBA @ 7m" },
+      { label: "Tank Capacity", value: "120 Liters" },
+      { label: "Phase Options", value: "Single & Three-Phase" },
+    ],
+    owner: {
+      name: "Summit Site Power",
+      photo: "",
+      locationLabel: "Denver, CO",
+      memberSince: "2024",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Place on level ground with minimum 1.5m clearance around exhaust and intake louvers. Never exceed rated continuous load. Refuel only with clean ultra-low-sulfur diesel while unit is powered down.",
     isDemo: true,
   },
   {
     _id: "demo-eq-05",
     name: "Industrial Air Compressor",
+    description:
+      "Towable rotary-screw diesel air compressor delivering consistent high-CFM airflow for jackhammers, abrasive blasting, pneumatic tools, and pipeline testing. Mounted on a road-ready single-axle chassis with manifold shutoff valves.",
     category: "Construction Equipment",
     rentalPrice: 540,
     rentalType: "Weekly",
@@ -84,15 +183,39 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "AeroTorque",
+    model: "CFM-185",
+    condition: "Good",
     createdAt: "2026-11-14T14:20:00.000Z",
     image: "/images/equipment/air-compressor.jpg",
+    images: [
+      "/images/equipment/air-compressor.jpg",
+      "/images/equipment/diesel-generator.jpg",
+    ],
     imageAlt:
       "Portable towable industrial air compressor unit on a clean paved workshop yard",
+    specifications: [
+      { label: "Air Delivery", value: "185 CFM @ 100 PSI" },
+      { label: "Outlets", value: "2 × 3/4\" Chicago Fittings" },
+      { label: "Hitch Type", value: "2\" Ball Towable" },
+      { label: "Enclosure", value: "Weatherproof Steel" },
+    ],
+    owner: {
+      name: "Midwest Tool Depot",
+      photo: "",
+      locationLabel: "Columbus, OH",
+      memberSince: "2024",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Towing vehicle must support trailer weight and working brake lights. Inspect whip-check safety cables on pneumatic hoses before pressurizing lines.",
     isDemo: true,
   },
   {
     _id: "demo-eq-06",
     name: "Professional Event Sound System",
+    description:
+      "Complete dual line-array PA speaker system with subwoofers, heavy-duty tripod stands, and a 24-channel digital mixing console. Tuned for conferences, corporate keynotes, outdoor concerts, and wedding receptions up to 600 guests.",
     category: "Event Equipment",
     rentalPrice: 210,
     rentalType: "Daily",
@@ -101,10 +224,32 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: true,
+    brand: "PulseAudio Pro",
+    model: "LA-2400 System",
+    condition: "Like New",
     createdAt: "2026-11-15T16:00:00.000Z",
     image: "/images/equipment/event-sound-system.jpg",
+    images: [
+      "/images/equipment/event-sound-system.jpg",
+      "/images/hero-equipment.jpg",
+    ],
     imageAlt:
       "Pair of black PA line-array event speakers on tripod stands beside a digital mixing console",
+    specifications: [
+      { label: "Peak Power", value: "4,800W Total Output" },
+      { label: "Mixer Channels", value: "24-Channel Digital" },
+      { label: "Coverage", value: "Up to 600 Attendees" },
+      { label: "Cabling Included", value: "XLR & Power Loom" },
+    ],
+    owner: {
+      name: "StageCraft Audio Co.",
+      photo: "",
+      locationLabel: "Chicago, IL",
+      memberSince: "2025",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Use indoors or under covered weatherproof staging. All XLR looms, stands, and console flight cases must be returned packed cleanly to avoid repacking fees.",
     isDemo: true,
   },
 ];
@@ -113,6 +258,8 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
   {
     _id: "demo-recent-01",
     name: "Commercial Cargo Van & Utility Trailer",
+    description:
+      "Crew-cab commercial utility pickup hitched with an enclosed tandem cargo trailer for moving film rigs, scaffolding, catering setups, or job-site materials cleanly and securely.",
     category: "Vehicles & Transportation",
     rentalPrice: 185,
     rentalType: "Daily",
@@ -121,15 +268,39 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: false,
+    brand: "FleetHaul",
+    model: "Utility 4x4 + 14ft Trailer",
+    condition: "Excellent",
     createdAt: "2026-11-17T09:30:00.000Z",
     image: "/images/equipment/cargo-utility-vehicle.jpg",
+    images: [
+      "/images/equipment/cargo-utility-vehicle.jpg",
+      "/images/equipment/air-compressor.jpg",
+    ],
     imageAlt:
       "Modern white commercial pickup truck and utility trailer parked on clean asphalt",
+    specifications: [
+      { label: "Trailer Volume", value: "14 ft Enclosed Box" },
+      { label: "Payload Capacity", value: "2,200 kg" },
+      { label: "Cab Seating", value: "5 Crew Passengers" },
+      { label: "Tie-Downs", value: "E-Track & Ratchet Straps" },
+    ],
+    owner: {
+      name: "Cascade Logistics Fleet",
+      photo: "",
+      locationLabel: "Seattle, WA",
+      memberSince: "2024",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Valid driver license required at pickup. Includes 200 miles per rental day; return interior swept clean and fuel matched to dispatch level.",
     isDemo: true,
   },
   {
     _id: "demo-recent-02",
     name: "Field Inspection & Power Kit",
+    description:
+      "Integrated site-diagnostics bundle featuring a 360-degree self-leveling laser level, handheld thermal imaging camera, and portable 2kWh LiFePO4 battery station for remote testing without grid access.",
     category: "Electronics",
     rentalPrice: 115,
     rentalType: "Daily",
@@ -138,15 +309,39 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: false,
+    brand: "GridSense",
+    model: "ProSurvey Suite",
+    condition: "Like New",
     createdAt: "2026-11-18T12:15:00.000Z",
     image: "/images/equipment/field-electronics.jpg",
+    images: [
+      "/images/equipment/field-electronics.jpg",
+      "/images/hero-equipment.jpg",
+    ],
     imageAlt:
       "Survey laser level, thermal inspection camera, and portable field power station on workbench",
+    specifications: [
+      { label: "Power Station", value: "2,048 Wh LiFePO4" },
+      { label: "Thermal Resolution", value: "320 × 240 IR" },
+      { label: "Laser Range", value: "45 m Self-Leveling" },
+      { label: "AC Outputs", value: "2,400W Pure Sine" },
+    ],
+    owner: {
+      name: "Harbor Tech Rentals",
+      photo: "",
+      locationLabel: "Boston, MA",
+      memberSince: "2025",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Instruments are calibrated prior to dispatch. Handle optical lenses and thermal sensor in padded transport dividers.",
     isDemo: true,
   },
   {
     _id: "demo-recent-03",
     name: "Cinema Rig & Field Lighting Bundle",
+    description:
+      "All-in-one production kit pairing a cinema mirrorless camera body, bi-color LED field panel, laser alignment tool, and compact cordless rig driver for multi-location commercial shoots.",
     category: "Photography Equipment",
     rentalPrice: 490,
     rentalType: "Weekly",
@@ -155,15 +350,39 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availabilityStatus: "Available",
     status: "approved",
     featured: false,
+    brand: "LumenStudio",
+    model: "Run-and-Gun Pro",
+    condition: "Like New",
     createdAt: "2026-11-19T15:10:00.000Z",
     image: "/images/hero-equipment.jpg",
+    images: [
+      "/images/hero-equipment.jpg",
+      "/images/equipment/mirrorless-camera.jpg",
+    ],
     imageAlt:
       "Cinema mirrorless camera rig, laser level, cordless drill, and portable LED studio light",
+    specifications: [
+      { label: "Camera Rig", value: "4K Cinema Cage + Matte Box" },
+      { label: "Field Light", value: "Bi-Color LED Panel 2700–6500K" },
+      { label: "Mounting", value: "15mm Rail System" },
+      { label: "Transport", value: "2 Custom Flight Cases" },
+    ],
+    owner: {
+      name: "Pacific Frame Supply",
+      photo: "",
+      locationLabel: "Los Angeles, CA",
+      memberSince: "2024",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Weekly production package includes pre-shoot bench check. Return all memory media formatted or backed up prior to check-in.",
     isDemo: true,
   },
   {
     _id: "demo-recent-04",
     name: "Heavy Site Crawler Excavator",
+    description:
+      "Full-size 20-ton hydraulic crawler excavator built for commercial foundation work, deep trenching, bulk earthmoving, and site clearing with reinforced digging bucket and climate-controlled cab.",
     category: "Construction Equipment",
     rentalPrice: 1850,
     rentalType: "Monthly",
@@ -172,10 +391,32 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availabilityStatus: "Limited Stock",
     status: "approved",
     featured: false,
+    brand: "TerraHeavy",
+    model: "EC-210D",
+    condition: "Good",
     createdAt: "2026-11-20T08:45:00.000Z",
     image: "/images/hero-excavator.jpg",
+    images: [
+      "/images/hero-excavator.jpg",
+      "/images/equipment/mini-excavator.jpg",
+    ],
     imageAlt:
       "Heavy hydraulic crawler excavator operating at a commercial construction foundation site",
+    specifications: [
+      { label: "Operating Weight", value: "21,400 kg" },
+      { label: "Max Reach", value: "9.8 m" },
+      { label: "Bucket Volume", value: "1.1 m³ Heavy Rock" },
+      { label: "Engine Tier", value: "Tier 4 Final Diesel" },
+    ],
+    owner: {
+      name: "LoneStar Earthworks",
+      photo: "",
+      locationLabel: "Dallas, TX",
+      memberSince: "2023",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Requires certified heavy-equipment operator and lowboy transport coordination. Monthly rental covers up to 176 operating hours.",
     isDemo: true,
   },
 ];
@@ -184,6 +425,8 @@ const DEMO_ADDITIONAL_EQUIPMENT = [
   {
     _id: "demo-extra-01",
     name: "Box Trailer & Site Utility Pickup",
+    description:
+      "Long-bed utility truck and weatherproof cargo trailer configured for regional material transport and multi-crew job-site staging.",
     category: "Vehicles & Transportation",
     rentalPrice: 680,
     rentalType: "Weekly",
@@ -192,15 +435,34 @@ const DEMO_ADDITIONAL_EQUIPMENT = [
     availabilityStatus: "Unavailable",
     status: "approved",
     featured: false,
+    brand: "FleetHaul",
+    model: "Utility Box 14",
+    condition: "Good",
     createdAt: "2026-11-16T11:00:00.000Z",
     image: "/images/equipment/cargo-utility-vehicle.jpg",
+    images: ["/images/equipment/cargo-utility-vehicle.jpg"],
     imageAlt:
       "Commercial utility pickup truck hitched to an enclosed cargo trailer",
+    specifications: [
+      { label: "Trailer Length", value: "14 ft Enclosed" },
+      { label: "Payload", value: "2,000 kg" },
+    ],
+    owner: {
+      name: "Delta Haulage Fleet",
+      photo: "",
+      locationLabel: "Dhaka, BD",
+      memberSince: "2025",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Currently reserved on an active dispatch. Check back after current rental window closes.",
     isDemo: true,
   },
   {
     _id: "demo-extra-02",
     name: "Portable Power & Thermal Survey Suite",
+    description:
+      "Monthly engineering survey bundle including thermal diagnostics camera, cross-line laser level, and LiFePO4 portable power station.",
     category: "Electronics",
     rentalPrice: 1450,
     rentalType: "Monthly",
@@ -209,10 +471,27 @@ const DEMO_ADDITIONAL_EQUIPMENT = [
     availabilityStatus: "Unavailable",
     status: "approved",
     featured: false,
+    brand: "GridSense",
+    model: "Survey-M1",
+    condition: "Excellent",
     createdAt: "2026-11-21T09:20:00.000Z",
     image: "/images/equipment/field-electronics.jpg",
+    images: ["/images/equipment/field-electronics.jpg"],
     imageAlt:
       "Laser survey level, handheld thermal inspection camera, and field power station",
+    specifications: [
+      { label: "Battery Capacity", value: "2,048 Wh" },
+      { label: "Thermal Camera", value: "320 × 240 px" },
+    ],
+    owner: {
+      name: "PortCity Diagnostics",
+      photo: "",
+      locationLabel: "Chattogram, BD",
+      memberSince: "2025",
+      verifiedNote: "Marketplace Owner Profile",
+    },
+    rentalTerms:
+      "Currently deployed on a monthly contract. Units return to active stock once inspected.",
     isDemo: true,
   },
 ];

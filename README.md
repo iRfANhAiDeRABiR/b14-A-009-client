@@ -26,15 +26,16 @@ src/
     page.js          # Initial GearNest landing page
     globals.css      # Tailwind v4 setup and GearNest design tokens
   components/
-    equipment/       # EquipmentCard, EquipmentDirectory, Search, Filters, Sort, Grid, Pagination, Loading, Empty/Error states
+    equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
-    layout/          # Navbar, Footer, and MainLayout
+    layout/          # Navbar, Footer, and MainLayout (with ToastProvider)
     shared/          # BrandLogo and reusable placeholder pages
-    ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton)
+    ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton, ToastViewport)
+  context/           # React context providers (ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
-  lib/               # Utilities and site configuration constants
-  hooks/             # Custom React hooks (useEquipment)
-  services/          # API client services (equipmentService)
+  lib/               # Utilities, site configuration, auth integration boundary, and rental pricing calculator
+  hooks/             # Custom React hooks (useEquipment, useEquipmentDetails, useFavorites)
+  services/          # API client services (equipmentService, favoriteService, bookingService)
   context/           # React context providers (future milestones)
 public/
   images/            # Curated local imagery
