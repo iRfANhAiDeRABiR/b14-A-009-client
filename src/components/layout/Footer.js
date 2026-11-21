@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { Container } from "@/components/ui/Container";
 
 const FOOTER_COLUMNS = [
   {
@@ -32,12 +33,12 @@ export function Footer() {
   const currentYear = 2026;
 
   return (
-    <footer className="mt-auto border-t border-[#14322B] bg-primary text-primary-foreground">
-      <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <footer className="mt-auto border-t border-primary-hover bg-primary text-primary-foreground">
+      <Container className="py-14">
         <div className="grid gap-10 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <BrandLogo tone="light" />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#D4DFDA]">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-secondary">
               A transparent equipment rental marketplace connecting commercial-grade
               gear owners with crews, creators, and project teams.
             </p>
@@ -64,7 +65,7 @@ export function Footer() {
           <div className="grid gap-8 sm:grid-cols-3 lg:col-span-8">
             {FOOTER_COLUMNS.map((column) => (
               <div key={column.title}>
-                <h2 className="font-heading text-sm font-semibold tracking-wider text-[#E5C170] uppercase">
+                <h2 className="type-label text-accent">
                   {column.title}
                 </h2>
                 <ul className="mt-4 flex flex-col gap-2.5">
@@ -72,7 +73,7 @@ export function Footer() {
                     <li key={item.label}>
                       <Link
                         href={item.href}
-                        className="cursor-pointer rounded text-sm text-[#D4DFDA] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+                        className="cursor-pointer rounded text-sm text-secondary transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
                       >
                         {item.label}
                       </Link>
@@ -84,13 +85,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/15 pt-6 text-xs text-[#C5D3CD] sm:flex-row sm:items-center">
+        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/15 pt-6 text-xs text-secondary sm:flex-row sm:items-center">
           <p>&copy; {currentYear} GearNest Equipment Rental Platform. All rights reserved.</p>
-          <p className="font-mono tracking-wide text-[#D4DFDA]">
+          <p className="font-medium tracking-wide text-secondary">
             Forest-Grade Reliability &middot; Verified Rentals
           </p>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 }

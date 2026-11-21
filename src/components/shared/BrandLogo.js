@@ -16,8 +16,10 @@ export function BrandLogo({ tone = "dark", className }) {
       <span
         aria-hidden="true"
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-[1.03]",
-          isLightText ? "bg-[#F7F8F4]/12 ring-1 ring-[#F7F8F4]/25" : "bg-primary shadow-sm"
+          "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-[1.03]",
+          isLightText
+            ? "bg-white/10 ring-1 ring-white/20"
+            : "bg-primary shadow-xs"
         )}
       >
         <svg
@@ -53,15 +55,15 @@ export function BrandLogo({ tone = "dark", className }) {
         <span
           className={cn(
             "font-heading text-xl font-bold tracking-tight",
-            isLightText ? "text-[#F7F8F4]" : "text-foreground"
+            isLightText ? "text-white" : "text-foreground"
           )}
         >
-          Gear<span className={isLightText ? "text-[#E5C170]" : "text-primary"}>Nest</span>
+          Gear<span className={isLightText ? "text-accent" : "text-primary"}>Nest</span>
         </span>
         <span
           className={cn(
             "mt-0.5 text-[10px] font-medium tracking-[0.14em] uppercase",
-            isLightText ? "text-[#C9D6D0]" : "text-muted"
+            isLightText ? "text-secondary" : "text-text-secondary"
           )}
         >
           Equipment Rental

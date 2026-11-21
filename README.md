@@ -22,13 +22,13 @@ GearNest is a modern equipment rental marketplace built with Next.js (App Router
 ```text
 src/
   app/
-    layout.js        # Root layout, metadata, Google Fonts (Outfit & Work Sans)
+    layout.js        # Root layout, metadata, Google Fonts (Manrope & Inter)
     page.js          # Initial GearNest landing page
     globals.css      # Tailwind v4 setup and GearNest design tokens
   components/
     layout/          # Navbar and Footer
     shared/          # BrandLogo, HeroSection, reusable marketplace visuals
-    ui/              # Foundational UI primitives (Button)
+    ui/              # Design system components (Button, Input, Badge, Card, SectionHeading, Container, Skeleton)
   lib/               # Utilities and site configuration constants
   hooks/             # Custom React hooks (future milestones)
   services/          # API client services (future milestones)
