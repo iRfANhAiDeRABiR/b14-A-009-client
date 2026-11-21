@@ -15,8 +15,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 3,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-10T09:00:00.000Z",
     image: "/images/equipment/mini-excavator.jpg",
-    imageAlt: "Compact hydraulic mini excavator parked on gravel at a residential construction site",
+    imageAlt:
+      "Compact hydraulic mini excavator parked on gravel at a residential construction site",
     isDemo: true,
   },
   {
@@ -29,8 +32,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 4,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-11T10:30:00.000Z",
     image: "/images/equipment/mirrorless-camera.jpg",
-    imageAlt: "Full-frame mirrorless cinema camera with 24-70mm lens mounted on a carbon tripod head",
+    imageAlt:
+      "Full-frame mirrorless cinema camera with 24-70mm lens mounted on a carbon tripod head",
     isDemo: true,
   },
   {
@@ -43,8 +49,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 2,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-12T08:15:00.000Z",
     image: "/images/equipment/agricultural-tractor.jpg",
-    imageAlt: "Utility agricultural tractor with front loader standing in an open green farmland field",
+    imageAlt:
+      "Utility agricultural tractor with front loader standing in an open green farmland field",
     isDemo: true,
   },
   {
@@ -57,8 +66,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 5,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-13T11:45:00.000Z",
     image: "/images/equipment/diesel-generator.jpg",
-    imageAlt: "Heavy-duty enclosed silent diesel power generator positioned on a concrete site pad",
+    imageAlt:
+      "Heavy-duty enclosed silent diesel power generator positioned on a concrete site pad",
     isDemo: true,
   },
   {
@@ -71,8 +83,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 2,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-14T14:20:00.000Z",
     image: "/images/equipment/air-compressor.jpg",
-    imageAlt: "Portable towable industrial air compressor unit on a clean paved workshop yard",
+    imageAlt:
+      "Portable towable industrial air compressor unit on a clean paved workshop yard",
     isDemo: true,
   },
   {
@@ -85,8 +100,11 @@ export const DEMO_FEATURED_EQUIPMENT = [
     availableQuantity: 3,
     availabilityStatus: "Available",
     status: "approved",
+    featured: true,
+    createdAt: "2026-11-15T16:00:00.000Z",
     image: "/images/equipment/event-sound-system.jpg",
-    imageAlt: "Pair of black PA line-array event speakers on tripod stands beside a digital mixing console",
+    imageAlt:
+      "Pair of black PA line-array event speakers on tripod stands beside a digital mixing console",
     isDemo: true,
   },
 ];
@@ -102,8 +120,11 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availableQuantity: 2,
     availabilityStatus: "Available",
     status: "approved",
+    featured: false,
+    createdAt: "2026-11-17T09:30:00.000Z",
     image: "/images/equipment/cargo-utility-vehicle.jpg",
-    imageAlt: "Modern white commercial pickup truck and utility trailer parked on clean asphalt",
+    imageAlt:
+      "Modern white commercial pickup truck and utility trailer parked on clean asphalt",
     isDemo: true,
   },
   {
@@ -116,8 +137,11 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availableQuantity: 6,
     availabilityStatus: "Available",
     status: "approved",
+    featured: false,
+    createdAt: "2026-11-18T12:15:00.000Z",
     image: "/images/equipment/field-electronics.jpg",
-    imageAlt: "Survey laser level, thermal inspection camera, and portable field power station on workbench",
+    imageAlt:
+      "Survey laser level, thermal inspection camera, and portable field power station on workbench",
     isDemo: true,
   },
   {
@@ -130,8 +154,11 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availableQuantity: 2,
     availabilityStatus: "Available",
     status: "approved",
+    featured: false,
+    createdAt: "2026-11-19T15:10:00.000Z",
     image: "/images/hero-equipment.jpg",
-    imageAlt: "Cinema mirrorless camera rig, laser level, cordless drill, and portable LED studio light",
+    imageAlt:
+      "Cinema mirrorless camera rig, laser level, cordless drill, and portable LED studio light",
     isDemo: true,
   },
   {
@@ -144,8 +171,54 @@ export const DEMO_RECENTLY_ADDED_EQUIPMENT = [
     availableQuantity: 1,
     availabilityStatus: "Limited Stock",
     status: "approved",
+    featured: false,
+    createdAt: "2026-11-20T08:45:00.000Z",
     image: "/images/hero-excavator.jpg",
-    imageAlt: "Heavy hydraulic crawler excavator operating at a commercial construction foundation site",
+    imageAlt:
+      "Heavy hydraulic crawler excavator operating at a commercial construction foundation site",
     isDemo: true,
   },
+];
+
+const DEMO_ADDITIONAL_EQUIPMENT = [
+  {
+    _id: "demo-extra-01",
+    name: "Box Trailer & Site Utility Pickup",
+    category: "Vehicles & Transportation",
+    rentalPrice: 680,
+    rentalType: "Weekly",
+    location: "Dhaka, BD",
+    availableQuantity: 0,
+    availabilityStatus: "Unavailable",
+    status: "approved",
+    featured: false,
+    createdAt: "2026-11-16T11:00:00.000Z",
+    image: "/images/equipment/cargo-utility-vehicle.jpg",
+    imageAlt:
+      "Commercial utility pickup truck hitched to an enclosed cargo trailer",
+    isDemo: true,
+  },
+  {
+    _id: "demo-extra-02",
+    name: "Portable Power & Thermal Survey Suite",
+    category: "Electronics",
+    rentalPrice: 1450,
+    rentalType: "Monthly",
+    location: "Chattogram, BD",
+    availableQuantity: 0,
+    availabilityStatus: "Unavailable",
+    status: "approved",
+    featured: false,
+    createdAt: "2026-11-21T09:20:00.000Z",
+    image: "/images/equipment/field-electronics.jpg",
+    imageAlt:
+      "Laser survey level, handheld thermal inspection camera, and field power station",
+    isDemo: true,
+  },
+];
+
+export const DEMO_CATALOG_EQUIPMENT = [
+  ...DEMO_FEATURED_EQUIPMENT,
+  ...DEMO_RECENTLY_ADDED_EQUIPMENT,
+  ...DEMO_ADDITIONAL_EQUIPMENT,
 ];

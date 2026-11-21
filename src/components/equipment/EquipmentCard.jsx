@@ -35,8 +35,8 @@ export function EquipmentCard({ item, index = 0 }) {
     (item?.availableQuantity > 0 ? "Available" : "Unavailable");
   const priceDisplay =
     typeof item?.rentalPrice === "number"
-      ? `$${item.rentalPrice.toLocaleString("en-US")}`
-      : `$${item?.rentalPrice || 0}`;
+      ? `৳${item.rentalPrice.toLocaleString("en-US")}`
+      : `৳${item?.rentalPrice || 0}`;
 
   const motionProps = prefersReducedMotion
     ? {}
