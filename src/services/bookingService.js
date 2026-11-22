@@ -3,6 +3,11 @@ import {
   DEFAULT_BOOKINGS_LIMIT,
   normalizeCustomerRental,
 } from "@/lib/customerUtils";
+import {
+  computeOwnerRentalStats,
+  DEFAULT_OWNER_RENTALS_LIMIT,
+  normalizeOwnerRental,
+} from "@/lib/ownerUtils";
 import { getAccessToken } from "@/lib/token-provider";
 
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(
@@ -249,4 +254,188 @@ export async function createBooking({
     token: activeToken,
     authRequired: true,
   });
+}
+
+/**
+ * Fetch rental bookings associated with the authenticated owner's equipment:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/owner/rentals
+ * Never sends ownerId as proof of authorization; backend identifies owner via verified JWT.
+ */
+export async function getOwnerRentals({
+  search = "",
+  bookingStatus = "all",
+  paymentStatus = "all",
+  equipmentId = "all",
+  sort = "newest",
+  page = 1,
+  limit = DEFAULT_OWNER_RENTALS_LIMIT,
+  token = null,
+} = {}) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("view rentals for your equipment");
+  }
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Owner rentals endpoint (GET /api/owner/rentals) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      { status: 503, code: "SERVICE_UNAVAILABLE" }
+    );
+  }
+
+  const params = new URLSearchParams();
+  const safePage =
+    Number.isFinite(Number(page)) && Number(page) >= 1
+      ? Math.floor(Number(page))
+      : 1;
+  const safeLimit =
+    Number.isFinite(Number(limit)) && Number(limit) >= 1
+      ? Math.floor(Number(limit))
+      : DEFAULT_OWNER_RENTALS_LIMIT;
+
+  params.set("page", String(safePage));
+  params.set("limit", String(safeLimit));
+
+  const trimmedSearch = String(search || "").trim();
+  if (trimmedSearch) {
+    params.set("search", trimmedSearch);
+  }
+
+  if (bookingStatus && bookingStatus !== "all") {
+    params.set("bookingStatus", bookingStatus);
+  }
+
+  if (paymentStatus && paymentStatus !== "all") {
+    params.set("paymentStatus", paymentStatus);
+  }
+
+  const cleanEquipmentId = String(equipmentId || "").trim();
+  if (cleanEquipmentId && cleanEquipmentId.toLowerCase() !== "all") {
+    params.set("equipmentId", cleanEquipmentId);
+  }
+
+  if (sort) {
+    params.set("sort", String(sort).trim());
+  }
+
+  const payload = await apiRequest(`/api/owner/rentals?${params.toString()}`, {
+    method: "GET",
+    token: activeToken,
+    authRequired: true,
+  });
+
+  const rawList = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.rentals)
+        ? payload.rentals
+        : Array.isArray(payload?.bookings)
+          ? payload.bookings
+          : [];
+
+  const items = rawList.map(normalizeOwnerRental).filter(Boolean);
+  const rawPagination = payload?.pagination || payload?.meta || null;
+
+  const hasServerPagination = Boolean(
+    rawPagination &&
+      (typeof rawPagination.totalItems === "number" ||
+        typeof rawPagination.total === "number" ||
+        typeof rawPagination.totalPages === "number")
+  );
+
+  const totalItems = hasServerPagination
+    ? Number(rawPagination.totalItems ?? rawPagination.total ?? items.length)
+    : items.length;
+  const resolvedLimit = Number(rawPagination?.limit || safeLimit);
+  const currentPage = Number(
+    rawPagination?.currentPage ?? rawPagination?.page ?? safePage
+  );
+  const totalPages = hasServerPagination
+    ? Math.max(
+        totalItems > 0 ? 1 : 0,
+        Number(
+          rawPagination.totalPages ??
+            Math.ceil(totalItems / Math.max(1, resolvedLimit))
+        )
+      )
+    : items.length > 0
+      ? 1
+      : 0;
+
+  const summary =
+    payload?.summary && typeof payload.summary === "object"
+      ? payload.summary
+      : payload?.stats && typeof payload.stats === "object"
+        ? payload.stats
+        : null;
+
+  const hasActiveFilters = Boolean(
+    trimmedSearch ||
+      (bookingStatus && bookingStatus !== "all") ||
+      (paymentStatus && paymentStatus !== "all") ||
+      (cleanEquipmentId && cleanEquipmentId.toLowerCase() !== "all")
+  );
+
+  return {
+    items,
+    stats: computeOwnerRentalStats(
+      items,
+      summary,
+      totalItems,
+      hasActiveFilters
+    ),
+    pagination: {
+      currentPage,
+      page: currentPage,
+      limit: resolvedLimit,
+      totalItems,
+      total: totalItems,
+      totalPages,
+      serverPaginationSupported: hasServerPagination,
+    },
+  };
+}
+
+/**
+ * Fetch full details for a single booking belonging to the authenticated owner:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/owner/rentals/:bookingId
+ */
+export async function getOwnerRentalById(bookingId, { token = null } = {}) {
+  if (!bookingId) {
+    throw new ApiError("Booking ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("inspect owner rental details");
+  }
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Owner rental detail endpoint (GET /api/owner/rentals/:bookingId) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      { status: 503, code: "SERVICE_UNAVAILABLE" }
+    );
+  }
+
+  const payload = await apiRequest(
+    `/api/owner/rentals/${encodeURIComponent(bookingId)}`,
+    {
+      method: "GET",
+      token: activeToken,
+      authRequired: true,
+    }
+  );
+
+  const record =
+    payload?.data && typeof payload.data === "object"
+      ? payload.data
+      : payload?.rental && typeof payload.rental === "object"
+        ? payload.rental
+        : payload?.booking && typeof payload.booking === "object"
+          ? payload.booking
+          : payload;
+
+  return normalizeOwnerRental(record);
 }

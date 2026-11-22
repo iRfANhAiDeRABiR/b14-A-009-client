@@ -32,7 +32,7 @@ src/
   components/
     auth/            # AuthLayout, LoginForm, RegisterForm, GoogleLoginButton, PasswordInput, ProtectedRoute, 403/Session states
     customer/        # CustomerOverview, CustomerStats, MonthlyRentalChart, RecentRentals, FavoritePreview, MyRentalsTable, BookingDetailsModal, BookingHistoryFilters, BookingPaymentSummary, FavoritesTable, FavoriteFilters, FavoriteEquipmentCard, RemoveFavoriteDialog, FavoriteEmptyState, ProfileForm
-    owner/           # OwnerAnalyticsOverview, OwnerDashboardHeader, OwnerStatsCards, OwnerEarningsChart, OwnerRentalChart, OwnerEquipmentPerformance, OwnerRecentRentals, OwnerQuickActions, AddEquipmentForm, EditEquipmentForm, MyEquipmentTable, EquipmentManagementFilters, EquipmentDetailsModal, DeleteEquipmentDialog, EquipmentStatusBadge, OwnerEquipmentStats, EquipmentBasicInfo, EquipmentRentalInfo, EquipmentSpecifications, EquipmentImageUpload, EquipmentLivePreview, OwnerInformationCard, RentalTermsForm
+    owner/           # OwnerAnalyticsOverview, OwnerDashboardHeader, OwnerStatsCards, OwnerEarningsChart, OwnerRentalChart, OwnerEquipmentPerformance, OwnerRecentRentals, OwnerQuickActions, AddEquipmentForm, EditEquipmentForm, MyEquipmentTable, EquipmentManagementFilters, EquipmentDetailsModal, DeleteEquipmentDialog, EquipmentStatusBadge, OwnerEquipmentStats, OwnerRentalOverview, OwnerRentalTable, OwnerRentalDetailsModal, OwnerRentalFilters, OwnerRentalSearch, OwnerRentalStatusBadge, OwnerRentalPagination, EquipmentBasicInfo, EquipmentRentalInfo, EquipmentSpecifications, EquipmentImageUpload, EquipmentLivePreview, OwnerInformationCard, RentalTermsForm
     dashboard/       # DashboardLayout, DashboardSidebar, DashboardHeader, DashboardMobileNav, DashboardBreadcrumbs, DashboardUserMenu, Skeletons
     equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
@@ -42,7 +42,7 @@ src/
   context/           # React context providers (AuthProvider, FavoriteProvider, ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
   lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient, validation, customerUtils, ownerUtils, roleNavigation & pricing
-  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings, useOwnerAnalytics, useEquipmentForm, useOwnerEquipment)
+  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings, useOwnerAnalytics, useEquipmentForm, useOwnerEquipment, useOwnerRentals)
   services/          # API client services (authService, customerService, ownerAnalyticsService, equipmentService, imageUploadService, favoriteService, bookingService, profileService)
 public/
   images/            # Curated local imagery
