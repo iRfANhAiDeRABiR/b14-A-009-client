@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export function EquipmentRentalInfo({
   values,
-  errors,
+  errors = {},
   onChange,
   disabled = false,
 }) {

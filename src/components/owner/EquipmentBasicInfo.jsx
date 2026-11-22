@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function EquipmentBasicInfo({
   values,
-  errors,
+  errors = {},
   onChange,
   disabled = false,
 }) {

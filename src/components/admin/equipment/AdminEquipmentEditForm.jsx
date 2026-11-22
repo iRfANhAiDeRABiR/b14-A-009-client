@@ -274,28 +274,28 @@ export function AdminEquipmentEditForm({
                   <div className="space-y-5 lg:col-span-7">
                     <EquipmentBasicInfo
                       values={values}
-                      fieldErrors={fieldErrors}
+                      errors={fieldErrors}
                       onChange={updateField}
                       disabled={isSubmitting}
                     />
 
                     <EquipmentRentalInfo
                       values={values}
-                      fieldErrors={fieldErrors}
+                      errors={fieldErrors}
                       onChange={updateField}
                       disabled={isSubmitting}
                     />
 
                     <EquipmentSpecifications
                       values={values}
-                      fieldErrors={fieldErrors}
+                      errors={fieldErrors}
                       onChange={updateField}
                       disabled={isSubmitting}
                     />
 
                     <RentalTermsForm
-                      values={values}
-                      fieldErrors={fieldErrors}
+                      value={values.rentalTerms}
+                      error={fieldErrors.rentalTerms}
                       onChange={updateField}
                       disabled={isSubmitting}
                     />
@@ -303,10 +303,11 @@ export function AdminEquipmentEditForm({
 
                   <div className="space-y-5 lg:col-span-5">
                     <EquipmentImageUpload
+                      hostedUrl={values.image}
+                      previewSrc={previewImageSrc}
                       uploadState={uploadState}
-                      previewImageSrc={previewImageSrc}
-                      fieldError={fieldErrors.image}
-                      onFileSelect={handleImageFileSelect}
+                      error={fieldErrors.image}
+                      onSelectFile={handleImageFileSelect}
                       onRemoveImage={handleRemoveImage}
                       disabled={isSubmitting}
                     />
