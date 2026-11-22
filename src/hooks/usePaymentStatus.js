@@ -25,7 +25,9 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
     useAuth();
 
   const sessionId = String(searchParams.get("session_id") || "").trim();
-  const bookingId = String(searchParams.get("booking_id") || "").trim();
+  const bookingId = String(
+    searchParams.get("bookingIntentId") || searchParams.get("booking_id") || ""
+  ).trim();
 
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pollAttempts, setPollAttempts] = React.useState(0);
@@ -56,10 +58,14 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
 
     let active = true;
 
-    const verifyPromise =
-      sessionId && isValidStripeSessionId(sessionId)
-        ? getPaymentSession(sessionId, { token })
-        : getBookingPaymentStatus(bookingId, { token });
+    const hasValidSession = Boolean(sessionId && isValidStripeSessionId(sessionId));
+    if (!hasValidSession && mode === "cancel") {
+      return undefined;
+    }
+
+    const verifyPromise = hasValidSession
+      ? getPaymentSession(sessionId, { token })
+      : getBookingPaymentStatus(bookingId, { token });
 
     verifyPromise
       .then((normalized) => {
@@ -98,20 +104,42 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
     hasLookupKey,
     isAuthLoading,
     isAuthenticated,
+    mode,
     requestKey,
     sessionId,
     token,
   ]);
 
+  const isCancelIntentOnly = Boolean(
+    mode === "cancel" &&
+      !(sessionId && isValidStripeSessionId(sessionId)) &&
+      bookingId
+  );
+
   const isLoading = Boolean(
-    hasLookupKey && (isAuthLoading || state.loadedKey !== requestKey)
+    hasLookupKey &&
+      !isCancelIntentOnly &&
+      (isAuthLoading || state.loadedKey !== requestKey)
   );
 
   const resolvedState = !hasLookupKey
     ? PAYMENT_VERIFICATION_STATES.INVALID
-    : isLoading
-      ? PAYMENT_VERIFICATION_STATES.VERIFYING
-      : state.verificationState;
+    : isCancelIntentOnly
+      ? PAYMENT_VERIFICATION_STATES.PROCESSING
+      : isLoading
+        ? PAYMENT_VERIFICATION_STATES.VERIFYING
+        : state.verificationState;
+
+  const resolvedSessionData = isCancelIntentOnly
+    ? {
+        bookingId,
+        bookingReference: bookingId,
+        quantity: null,
+        totalAmount: null,
+        paymentStatus: "Pending",
+        canRetryPayment: true,
+      }
+    : state.sessionData;
 
   // Bounded backoff polling ONLY on /payment/success when backend is still awaiting webhook confirmation.
   React.useEffect(() => {
@@ -149,7 +177,7 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
         token || (typeof getToken === "function" ? await getToken() : null);
 
       const sessionResult = await createCheckoutSession(
-        { bookingId: targetBookingId },
+        { bookingIntentId: targetBookingId },
         { token: activeToken }
       );
 
@@ -181,7 +209,7 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
     hasLookupKey,
     loading: isLoading,
     verificationState: resolvedState,
-    sessionData: state.sessionData,
+    sessionData: resolvedSessionData,
     error: !hasLookupKey
       ? "Missing or invalid payment session reference. Please check your booking status in My Rentals."
       : state.error,

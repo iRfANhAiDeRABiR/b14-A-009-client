@@ -32,15 +32,8 @@ function createBackendUnavailableError(endpointLabel) {
  */
 export async function createCheckoutSession(
   {
+    bookingIntentId = "",
     bookingId = "",
-    equipmentId = "",
-    startDate = "",
-    endDate = "",
-    quantity = 1,
-    contactNumber = "",
-    deliveryAddress = "",
-    additionalNotes = "",
-    idempotencyKey = "",
   } = {},
   { token = null } = {}
 ) {
@@ -54,27 +47,17 @@ export async function createCheckoutSession(
     );
   }
 
-  const cleanBookingId = String(bookingId || "").trim();
-  const payloadBody = cleanBookingId
-    ? { bookingId: cleanBookingId }
-    : {
-        equipmentId: String(equipmentId || "").trim(),
-        startDate: String(startDate || "").trim(),
-        endDate: String(endDate || "").trim(),
-        quantity: Math.floor(Number(quantity) || 1),
-        contactNumber: String(contactNumber || "").trim(),
-        deliveryAddress: String(deliveryAddress || "").trim(),
-        additionalNotes: String(additionalNotes || "").trim(),
-      };
-
-  const headers = idempotencyKey
-    ? { "Idempotency-Key": String(idempotencyKey) }
-    : {};
+  const cleanIntentId = String(bookingIntentId || bookingId || "").trim();
+  if (!cleanIntentId) {
+    throw new ApiError(
+      "Booking reservation ID is required to start Stripe Checkout.",
+      { status: 400, code: "BAD_REQUEST" }
+    );
+  }
 
   const response = await apiRequest("/api/payments/create-checkout-session", {
     method: "POST",
-    body: payloadBody,
-    headers,
+    body: { bookingIntentId: cleanIntentId },
     token: activeToken,
     authRequired: true,
   });

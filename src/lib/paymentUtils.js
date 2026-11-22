@@ -104,7 +104,7 @@ export function normalizeCheckoutSessionCreation(rawResponse) {
         : {};
 
   return {
-    bookingId: String(data.bookingId || data._id || "").trim(),
+    bookingId: String(data.bookingIntentId || data.bookingId || data._id || "").trim(),
     sessionId: String(data.sessionId || data.stripeSessionId || "").trim(),
     checkoutUrl: String(data.checkoutUrl || data.url || "").trim(),
     message:
@@ -137,7 +137,7 @@ export function normalizePaymentSessionPayload(rawResponse) {
     data.sessionId || data.stripeSessionId || data.id || ""
   ).trim();
   const bookingId = String(
-    data.bookingId || bookingObj._id || bookingObj.id || ""
+    data.bookingIntentId || data.bookingId || bookingObj._id || bookingObj.id || ""
   ).trim();
   const bookingReference = String(
     data.bookingReference ||

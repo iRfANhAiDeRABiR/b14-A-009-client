@@ -11,8 +11,12 @@ import {
   calculateRentalEstimate,
   getTodayDateString,
 } from "@/lib/rentalPricing";
-import { checkBookingAvailability } from "@/services/bookingService";
+import {
+  checkBookingAvailability,
+  createBooking,
+} from "@/services/bookingService";
 import { createCheckoutSession } from "@/services/paymentService";
+import { USER_ROLES } from "@/lib/roleNavigation";
 import { useToast } from "@/context/ToastContext";
 import { BookingSummary } from "@/components/equipment/BookingSummary";
 import { Button } from "@/components/ui/Button";
@@ -43,10 +47,13 @@ export function BookingModal({
   const closeButtonRef = React.useRef(null);
   const errorBannerRef = React.useRef(null);
   const submitLockRef = React.useRef(false);
-  const idempotencyKeyRef = React.useRef("");
+  const bookingIntentIdRef = React.useRef("");
 
   const today = React.useMemo(() => getTodayDateString(), []);
   const maxAvailable = Math.max(0, Number(equipment?.availableQuantity) || 0);
+  const isNonCustomerRole = Boolean(
+    auth?.isAuthenticated && auth?.role && auth.role !== USER_ROLES.CUSTOMER
+  );
 
   const [formValues, setFormValues] = React.useState({
     startDate: "",
@@ -112,7 +119,7 @@ export function BookingModal({
 
   const setField = (field) => (event) => {
     const value = event.target.value;
-    idempotencyKeyRef.current = "";
+    bookingIntentIdRef.current = "";
     setFormValues((prev) => ({ ...prev, [field]: value }));
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: "" }));
@@ -208,36 +215,44 @@ export function BookingModal({
         return;
       }
 
-      const availability = await checkBookingAvailability({
-        equipmentId: equipment._id,
-        startDate: formValues.startDate,
-        endDate: formValues.endDate,
-        quantity: Number(formValues.quantity),
-        token: activeToken,
-      });
-
-      if (availability && availability.available === false) {
-        const msg =
-          availability.message ||
-          "This equipment is unavailable for the selected dates and quantity.";
-        setSubmissionError(msg);
+      if (isNonCustomerRole) {
+        const message =
+          "Rental reservations can only be placed with a Customer account. Please sign in as a Customer to book.";
+        setSubmissionError(message);
         showToast({
-          title: "Equipment unavailable",
-          description: msg,
+          title: "Customer account required",
+          description: message,
           variant: "warning",
         });
+        setTimeout(() => errorBannerRef.current?.focus(), 0);
         return;
       }
 
-      if (!idempotencyKeyRef.current) {
-        idempotencyKeyRef.current =
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `checkout-${equipment._id}-${Date.now()}`;
-      }
+      let activeIntentId = bookingIntentIdRef.current;
 
-      const checkoutResult = await createCheckoutSession(
-        {
+      if (!activeIntentId) {
+        const availability = await checkBookingAvailability({
+          equipmentId: equipment._id,
+          startDate: formValues.startDate,
+          endDate: formValues.endDate,
+          quantity: Number(formValues.quantity),
+          token: activeToken,
+        });
+
+        if (availability && availability.available === false) {
+          const msg =
+            availability.message ||
+            "This equipment is unavailable for the selected dates and quantity.";
+          setSubmissionError(msg);
+          showToast({
+            title: "Equipment unavailable",
+            description: msg,
+            variant: "warning",
+          });
+          return;
+        }
+
+        const bookingResponse = await createBooking({
           equipmentId: equipment._id,
           startDate: formValues.startDate,
           endDate: formValues.endDate,
@@ -245,8 +260,28 @@ export function BookingModal({
           contactNumber: formValues.contactNumber.trim(),
           deliveryAddress: formValues.deliveryAddress.trim(),
           additionalNotes: formValues.additionalNotes.trim(),
-          idempotencyKey: idempotencyKeyRef.current,
-        },
+          token: activeToken,
+        });
+
+        activeIntentId = String(
+          bookingResponse?.data?.bookingIntentId ||
+            bookingResponse?.bookingIntentId ||
+            bookingResponse?.data?._id ||
+            bookingResponse?._id ||
+            ""
+        ).trim();
+
+        if (!activeIntentId) {
+          throw new Error(
+            "Unable to create a booking reservation hold before checkout."
+          );
+        }
+
+        bookingIntentIdRef.current = activeIntentId;
+      }
+
+      const checkoutResult = await createCheckoutSession(
+        { bookingIntentId: activeIntentId },
         { token: activeToken }
       );
 
@@ -260,11 +295,21 @@ export function BookingModal({
 
       window.location.assign(checkoutResult.checkoutUrl);
     } catch (error) {
-      idempotencyKeyRef.current = "";
-      const message =
+      if (
+        error?.status === 404 ||
+        error?.status === 409 ||
+        error?.status === 410
+      ) {
+        bookingIntentIdRef.current = "";
+      }
+      const rawMessage =
         error instanceof Error
           ? error.message
           : "Unable to complete booking and payment checkout request.";
+      const message =
+        rawMessage.toLowerCase() === "failed to fetch"
+          ? "Unable to reach the GearNest payment server. Check your connection or try again in a few seconds."
+          : rawMessage;
       setSubmissionError(message);
       showToast({
         title: "Checkout unavailable",
@@ -358,6 +403,21 @@ export function BookingModal({
               <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-12">
                 {/* Left: Form Inputs */}
                 <div className="space-y-4 lg:col-span-7">
+                  {isNonCustomerRole && !submissionError ? (
+                    <div
+                      role="note"
+                      className="rounded-xl border border-warning-border bg-warning-bg p-3.5 text-xs leading-relaxed text-warning"
+                    >
+                      <p className="font-semibold">
+                        Customer account required for checkout
+                      </p>
+                      <p className="mt-0.5">
+                        You are currently signed in as {auth?.role}. Switch to
+                        or register a Customer account to reserve equipment.
+                      </p>
+                    </div>
+                  ) : null}
+
                   {submissionError ? (
                     <div
                       ref={errorBannerRef}
