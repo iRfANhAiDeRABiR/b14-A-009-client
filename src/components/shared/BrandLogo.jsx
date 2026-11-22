@@ -64,7 +64,7 @@ export function BrandLogo({ tone = "dark", className }) {
               : "text-[#193D34] dark:text-[#EDF2EE]"
           )}
         >
-          GearNest
+          Gear<span className="text-accent">Nest</span>
         </span>
         <span
           className={cn(
