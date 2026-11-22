@@ -9,6 +9,10 @@ export const metadata = {
   title: "Payment Verification",
   description:
     "Verify your Stripe Checkout transaction and inspect updated rental payment status on GearNest.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 function PaymentStatusFallback() {

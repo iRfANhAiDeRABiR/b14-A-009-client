@@ -166,7 +166,7 @@ export function AdminEquipmentFilters({
               disabled={disabled}
               onClick={chip.onRemove}
               aria-label={`Remove ${chip.label}`}
-              className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-full border border-primary/20 bg-secondary px-2.5 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-[#CCE0D1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-full border border-primary/20 bg-secondary px-2.5 py-0.5 text-xs font-medium text-primary transition-colors hover:bg-secondary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span>{chip.label}</span>
               <X aria-hidden="true" className="size-3" />

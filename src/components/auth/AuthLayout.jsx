@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +36,7 @@ export function AuthLayout({
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16", className)}>
       <Container>
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <Link
             href="/"
             className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -43,6 +44,7 @@ export function AuthLayout({
             <ArrowLeft aria-hidden="true" className="size-4" />
             <span>Back to marketplace</span>
           </Link>
+          <ThemeToggle />
         </div>
 
         <motion.div
@@ -50,9 +52,9 @@ export function AuthLayout({
           className="grid overflow-hidden rounded-2xl border border-border bg-surface shadow-sm lg:grid-cols-12"
         >
           {/* Left Editorial Brand Showcase */}
-          <aside className="relative flex flex-col justify-between bg-primary p-6 text-primary-foreground sm:p-8 lg:col-span-5 lg:p-10">
+          <aside className="relative flex flex-col justify-between bg-[#193D34] p-6 text-white sm:p-8 lg:col-span-5 lg:p-10">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-secondary">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-[#DCE8DF]">
                 <ShieldCheck aria-hidden="true" className="size-3.5 text-accent" />
                 <span>{eyebrow}</span>
               </span>
@@ -60,7 +62,7 @@ export function AuthLayout({
               <h2 className="mt-5 font-heading text-2xl font-bold tracking-tight text-white sm:text-3xl">
                 {asideTitle}
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-secondary/90">
+              <p className="mt-3 text-sm leading-relaxed text-[#DCE8DF]/90">
                 {asideDescription}
               </p>
 
@@ -80,7 +82,7 @@ export function AuthLayout({
               </ul>
             </div>
 
-            <div className="mt-6 hidden items-center gap-2.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-xs text-secondary lg:flex">
+            <div className="mt-6 hidden items-center gap-2.5 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-xs text-[#DCE8DF] lg:flex">
               <Lock aria-hidden="true" className="size-4 shrink-0 text-accent" />
               <span>
                 Session cookies & short-lived JWT credentials keep every booking and inventory action protected.

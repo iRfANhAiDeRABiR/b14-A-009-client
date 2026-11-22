@@ -33,7 +33,7 @@ export function FavoriteButton({
         className={cn(
           "type-button inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 py-2.5 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60",
           isFavorite
-            ? "border-danger-border bg-danger-bg text-danger hover:bg-[#FCE6E5]"
+            ? "border-danger-border bg-danger-bg text-danger hover:bg-danger-hover-bg"
             : "border-border bg-surface text-foreground hover:border-primary/40 hover:bg-surface-subtle"
         )}
       >

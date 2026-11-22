@@ -32,7 +32,7 @@ export function OwnerCTA() {
       <Container>
         <motion.div
           {...motionProps}
-          className="relative overflow-hidden rounded-2xl border border-primary-hover bg-primary text-primary-foreground shadow-md"
+          className="relative overflow-hidden rounded-2xl border border-[#245447] bg-[#193D34] text-white shadow-md"
         >
           {/* Subtle architectural accent geometry */}
           <div
@@ -55,12 +55,12 @@ export function OwnerCTA() {
               >
                 Have Equipment to Rent?
               </h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-secondary">
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-[#DCE8DF]">
                 Turn unused equipment into an opportunity. List your equipment and
                 connect with people who need it.
               </p>
 
-              <ul className="mt-5 flex flex-col gap-2.5 text-sm text-secondary">
+              <ul className="mt-5 flex flex-col gap-2.5 text-sm text-[#DCE8DF]">
                 {OWNER_POINTS.map((point) => (
                   <li key={point} className="flex items-start gap-2.5">
                     <CheckCircle2
@@ -89,7 +89,7 @@ export function OwnerCTA() {
             </div>
 
             <div className="lg:col-span-5">
-              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/15 bg-primary-hover shadow-sm">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-white/15 bg-[#245447] shadow-sm">
                 <Image
                   src="/images/hero-equipment.jpg"
                   alt="Professional camera rig, rotary drill, laser level, and LED lighting ready to list on GearNest"

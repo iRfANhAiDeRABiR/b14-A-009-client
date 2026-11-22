@@ -6,6 +6,7 @@
   --color-primary-hover: #245447;
   --color-primary-foreground: #FFFFFF;
   --color-secondary: #DCE8DF;
+  --color-secondary-hover: #CCE0D1;
   --color-secondary-foreground: #193D34;
   --color-background: #F7F8F4;
   --color-surface: #FFFFFF;
@@ -26,6 +27,7 @@
   --color-warning-border: #EED69C;
   --color-danger: #B42318;
   --color-danger-bg: #FEF2F2;
+  --color-danger-hover-bg: #FCE6E5;
   --color-danger-border: #F5C2BE;
 
   /* Typography Scale */
@@ -81,11 +83,47 @@
   --container-wide: 90rem;
 }
 
+:root[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  --color-primary: #347A67;
+  --color-primary-hover: #3F8F79;
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: #1D332B;
+  --color-secondary-hover: #264238;
+  --color-secondary-foreground: #DCE8DF;
+  --color-background: #0F1714;
+  --color-surface: #16221D;
+  --color-surface-subtle: #1D2C26;
+  --color-text: #EDF2EE;
+  --color-text-secondary: #B4C2B9;
+  --color-text-muted: #84968B;
+  --color-border: #283A32;
+  --color-accent: #D9A441;
+  --color-accent-foreground: #141B18;
+
+  --color-success: #5FD397;
+  --color-success-bg: #122E20;
+  --color-success-border: #23583D;
+  --color-warning: #F3C45B;
+  --color-warning-bg: #2D220B;
+  --color-warning-border: #594317;
+  --color-danger: #F88078;
+  --color-danger-bg: #321515;
+  --color-danger-hover-bg: #471E1E;
+  --color-danger-border: #632727;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 14px 32px -8px rgba(0, 0, 0, 0.48), 0 4px 10px -2px rgba(0, 0, 0, 0.28);
+}
+
 @theme inline {
   --color-primary: var(--color-primary);
   --color-primary-hover: var(--color-primary-hover);
   --color-primary-foreground: var(--color-primary-foreground);
   --color-secondary: var(--color-secondary);
+  --color-secondary-hover: var(--color-secondary-hover);
   --color-secondary-foreground: var(--color-secondary-foreground);
   --color-background: var(--color-background);
   --color-surface: var(--color-surface);
@@ -106,6 +144,7 @@
   --color-warning-border: var(--color-warning-border);
   --color-danger: var(--color-danger);
   --color-danger-bg: var(--color-danger-bg);
+  --color-danger-hover-bg: var(--color-danger-hover-bg);
   --color-danger-border: var(--color-danger-border);
 
   --font-heading: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;

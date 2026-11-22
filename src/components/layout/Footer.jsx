@@ -61,12 +61,12 @@ export function Footer() {
   const currentYear = 2026;
 
   return (
-    <footer className="mt-auto border-t border-primary-hover bg-primary text-primary-foreground">
+    <footer className="mt-auto border-t border-[#245447] bg-[#193D34] text-white">
       <Container className="py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12">
           <div className="sm:col-span-2 lg:col-span-4">
             <BrandLogo tone="light" />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-secondary">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#DCE8DF]">
               A transparent equipment rental marketplace connecting commercial-grade
               gear owners with crews, creators, and project teams.
             </p>
@@ -84,7 +84,7 @@ export function Footer() {
                     <li key={item.label}>
                       <Link
                         href={item.href}
-                        className="inline-block cursor-pointer rounded py-0.5 text-sm text-secondary transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+                        className="inline-block cursor-pointer rounded py-0.5 text-sm text-[#DCE8DF] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         {item.label}
                       </Link>
@@ -96,10 +96,10 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/15 pt-6 text-xs text-secondary sm:flex-row sm:items-center">
+        <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/15 pt-6 text-xs text-[#DCE8DF] sm:flex-row sm:items-center">
           <p>&copy; {currentYear} GearNest. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4">
-            <span className="font-medium tracking-wide text-secondary">
+            <span className="font-medium tracking-wide text-[#DCE8DF]">
               GearNest Equipment Rental Platform
             </span>
             <span aria-hidden="true" className="text-white/30">
@@ -107,13 +107,13 @@ export function Footer() {
             </span>
             <Link
               href="/terms"
-              className="cursor-pointer text-secondary transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+              className="cursor-pointer text-[#DCE8DF] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Terms
             </Link>
             <Link
               href="/privacy"
-              className="cursor-pointer text-secondary transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+              className="cursor-pointer text-[#DCE8DF] transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Privacy
             </Link>

@@ -9,6 +9,10 @@ export const metadata = {
   title: "Payment Not Completed",
   description:
     "Your Stripe Checkout session was not completed. Review your booking eligibility or return to GearNest.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 function PaymentCancelFallback() {

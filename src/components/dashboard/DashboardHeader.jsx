@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getRoleLabel, normalizeUserRole } from "@/lib/roleNavigation";
 import { DashboardBreadcrumbs } from "@/components/dashboard/DashboardBreadcrumbs";
 import { DashboardUserMenu } from "@/components/dashboard/DashboardUserMenu";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button } from "@/components/ui/Button";
 
 export function DashboardHeader({
@@ -91,6 +92,7 @@ export function DashboardHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <ThemeToggle compact />
         {/* Notification area */}
         <div ref={notifRef} className="relative">
           <button

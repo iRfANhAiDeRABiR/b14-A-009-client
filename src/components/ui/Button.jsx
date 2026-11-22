@@ -6,13 +6,13 @@ const VARIANTS = {
   primary:
     "bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover focus-visible:ring-primary",
   secondary:
-    "bg-secondary text-secondary-foreground hover:bg-[#CCE0D1] focus-visible:ring-primary",
+    "bg-secondary text-secondary-foreground hover:bg-secondary-hover focus-visible:ring-primary",
   outline:
     "border border-border bg-surface text-foreground hover:border-primary/40 hover:bg-surface-subtle focus-visible:ring-primary",
   ghost:
     "bg-transparent text-foreground hover:bg-secondary/60 focus-visible:ring-primary",
   inverted:
-    "bg-surface text-primary shadow-xs hover:bg-secondary focus-visible:ring-surface",
+    "bg-white text-[#193D34] shadow-xs hover:bg-[#DCE8DF] focus-visible:ring-white",
 };
 
 const SIZES = {

@@ -26,6 +26,7 @@ import {
 } from "@/lib/roleNavigation";
 import { SITE_CONFIG } from "@/lib/site-config";
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -207,6 +208,7 @@ export function Navbar({ auth: authOverride = null }) {
         </nav>
 
         <div className="hidden shrink-0 items-center gap-2.5 lg:flex">
+          <ThemeToggle compact />
           {isSessionLoading ? (
             <div className="flex items-center gap-2" aria-hidden="true">
               <Skeleton className="h-10 w-24 rounded-lg" />
@@ -320,20 +322,23 @@ export function Navbar({ auth: authOverride = null }) {
           )}
         </div>
 
-        <button
-          type="button"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-navigation-drawer"
-          aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
-          onClick={() => setMobileOpen((prev) => !prev)}
-          className="inline-flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
-        >
-          {mobileOpen ? (
-            <X aria-hidden="true" className="size-5" />
-          ) : (
-            <Menu aria-hidden="true" className="size-5" />
-          )}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle compact />
+          <button
+            type="button"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation-drawer"
+            aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className="inline-flex size-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-surface-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {mobileOpen ? (
+              <X aria-hidden="true" className="size-5" />
+            ) : (
+              <Menu aria-hidden="true" className="size-5" />
+            )}
+          </button>
+        </div>
       </Container>
 
       <AnimatePresence initial={false}>

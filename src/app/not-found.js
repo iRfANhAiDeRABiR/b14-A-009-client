@@ -1,9 +1,13 @@
-import { ArrowLeft, Compass, FileQuestion, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, Compass, FileQuestion } from "lucide-react";
 
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
+
+export const metadata = {
+  title: "Page Not Found",
+};
 
 export default function GlobalNotFoundPage() {
   return (
@@ -30,10 +34,10 @@ export default function GlobalNotFoundPage() {
             id="not-found-heading"
             className="type-page-title mt-4 text-foreground"
           >
-            We couldn&apos;t find that page
+            Oops! Page Not Found
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-text-secondary">
-            The GearNest route or resource you requested does not exist or may have moved.
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-text-secondary sm:text-base">
+            The page you are looking for may have been moved, removed or is temporarily unavailable.
           </p>
 
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
@@ -43,11 +47,7 @@ export default function GlobalNotFoundPage() {
             </Button>
             <Button href="/equipment" variant="outline" size="md">
               <Compass aria-hidden="true" className="size-4" />
-              <span>Browse Equipment</span>
-            </Button>
-            <Button href="/dashboard" variant="ghost" size="md">
-              <LayoutDashboard aria-hidden="true" className="size-4" />
-              <span>Dashboard</span>
+              <span>Explore Equipment</span>
             </Button>
           </div>
         </Card>
