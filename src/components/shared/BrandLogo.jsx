@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+/**
+ * Unified GearNest BrandLogo shared across Navbar, Footer, Sidebar, and MobileNav.
+ * Maintains identical icon geometry, wordmark typography, and proportions across variants.
+ */
 export function BrandLogo({ tone = "dark", className }) {
   const isLightText = tone === "light";
 
@@ -18,8 +22,8 @@ export function BrandLogo({ tone = "dark", className }) {
         className={cn(
           "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-[1.03]",
           isLightText
-            ? "bg-white/10 ring-1 ring-white/20"
-            : "bg-primary shadow-xs"
+            ? "bg-white/10 ring-1 ring-white/25"
+            : "bg-[#193D34] shadow-xs ring-1 ring-[#245447]/30"
         )}
       >
         <svg
@@ -55,15 +59,17 @@ export function BrandLogo({ tone = "dark", className }) {
         <span
           className={cn(
             "font-heading text-xl font-bold tracking-tight",
-            isLightText ? "text-white" : "text-foreground"
+            isLightText
+              ? "text-white"
+              : "text-[#193D34] dark:text-[#EDF2EE]"
           )}
         >
-          Gear<span className={isLightText ? "text-accent" : "text-primary"}>Nest</span>
+          GearNest
         </span>
         <span
           className={cn(
             "mt-0.5 text-[10px] font-medium tracking-[0.14em] uppercase",
-            isLightText ? "text-secondary" : "text-text-secondary"
+            isLightText ? "text-[#DCE8DF]" : "text-text-secondary"
           )}
         >
           Equipment Rental

@@ -65,7 +65,7 @@ export const metadata = {
   },
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var k="gearnest-theme";var t=localStorage.getItem(k);if(t!=="dark"&&t!=="light"){t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.dataset.theme=t;document.documentElement.classList.toggle("dark",t==="dark");}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("gearnest-theme");if(t!=="dark"&&t!=="light"){t="light";}document.documentElement.dataset.theme=t;document.documentElement.classList.toggle("dark",t==="dark");}catch(e){}})();`;
 
 export default function RootLayout({ children }) {
   return (

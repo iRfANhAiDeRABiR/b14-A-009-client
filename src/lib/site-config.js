@@ -66,12 +66,12 @@ export const SITE_CONFIG = {
     {
       title: "Categories",
       links: [
-        { label: "Construction Equipment", href: "/equipment?category=construction" },
-        { label: "Photography Equipment", href: "/equipment?category=photography" },
-        { label: "Agriculture Equipment", href: "/equipment?category=agriculture" },
-        { label: "Vehicles & Transportation", href: "/equipment?category=vehicles" },
-        { label: "Electronics", href: "/equipment?category=electronics" },
-        { label: "Event Equipment", href: "/equipment?category=event" },
+        { label: "Construction Equipment", href: "/equipment?category=Construction%20Equipment" },
+        { label: "Photography Equipment", href: "/equipment?category=Photography%20Equipment" },
+        { label: "Agriculture Equipment", href: "/equipment?category=Agriculture%20Equipment" },
+        { label: "Vehicles & Transportation", href: "/equipment?category=Vehicles%20%26%20Transportation" },
+        { label: "Electronics", href: "/equipment?category=Electronics" },
+        { label: "Event Equipment", href: "/equipment?category=Event%20Equipment" },
       ],
     },
     {

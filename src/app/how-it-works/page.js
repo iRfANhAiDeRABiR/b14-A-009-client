@@ -1,15 +1,21 @@
-import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+import { CustomerSteps } from "@/components/pages/how-it-works/CustomerSteps";
+import { HowItWorksHero } from "@/components/pages/how-it-works/HowItWorksHero";
+import { OwnerSteps } from "@/components/pages/how-it-works/OwnerSteps";
+import { WorkflowFAQ } from "@/components/pages/how-it-works/WorkflowFAQ";
 
 export const metadata = {
   title: "How It Works",
+  description:
+    "Learn how to discover, book and manage equipment rentals through GearNest.",
 };
 
 export default function HowItWorksPage() {
   return (
-    <ComingSoonPage
-      eyebrow="Rental Workflow"
-      title="How GearNest Works"
-      description="Step-by-step guidance for browsing verified listings, booking flexible rental windows, and managing owner inventory is scheduled for an upcoming milestone."
-    />
+    <>
+      <HowItWorksHero />
+      <CustomerSteps />
+      <OwnerSteps />
+      <WorkflowFAQ />
+    </>
   );
 }

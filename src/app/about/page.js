@@ -1,15 +1,25 @@
-import { ComingSoonPage } from "@/components/shared/ComingSoonPage";
+import { AboutCTA } from "@/components/pages/about/AboutCTA";
+import { AboutHero } from "@/components/pages/about/AboutHero";
+import { CategoryShowcase } from "@/components/pages/about/CategoryShowcase";
+import { MissionVision } from "@/components/pages/about/MissionVision";
+import { OurStory } from "@/components/pages/about/OurStory";
+import { OurValues } from "@/components/pages/about/OurValues";
 
 export const metadata = {
   title: "About Us",
+  description:
+    "Learn about GearNest's mission to make equipment rental simpler for customers and equipment owners.",
 };
 
 export default function AboutPage() {
   return (
-    <ComingSoonPage
-      eyebrow="Platform Overview"
-      title="About GearNest"
-      description="Learn about GearNest's mission to connect verified local equipment owners with contractors, creators, and teams across transparent rental workflows."
-    />
+    <>
+      <AboutHero />
+      <OurStory />
+      <MissionVision />
+      <CategoryShowcase />
+      <OurValues />
+      <AboutCTA />
+    </>
   );
 }

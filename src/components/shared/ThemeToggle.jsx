@@ -26,6 +26,7 @@ export function ThemeToggle({ compact = false, className = "" }) {
     <button
       type="button"
       onClick={toggleTheme}
+      aria-pressed={mounted ? isDark : undefined}
       aria-label={label}
       title={label}
       className={cn(

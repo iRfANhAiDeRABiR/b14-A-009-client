@@ -19,19 +19,13 @@ function applyDomTheme(nextTheme) {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
-function readStoredOrSystemTheme() {
+function readStoredTheme() {
   if (typeof window === "undefined") return "light";
 
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === "light" || stored === "dark") {
+    if (stored === "dark" || stored === "light") {
       return stored;
-    }
-    if (
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
-      return "dark";
     }
   } catch {
     // Ignore storage restriction gracefully.
@@ -48,7 +42,7 @@ function subscribeThemeStore(callback) {
 
   const handleStorage = (event) => {
     if (!event.key || event.key === THEME_STORAGE_KEY) {
-      applyDomTheme(readStoredOrSystemTheme());
+      applyDomTheme(readStoredTheme());
       callback();
     }
   };
@@ -68,7 +62,7 @@ function subscribeThemeStore(callback) {
 export function ThemeProvider({ children }) {
   const theme = React.useSyncExternalStore(
     subscribeThemeStore,
-    readStoredOrSystemTheme,
+    readStoredTheme,
     () => "light"
   );
 
@@ -90,7 +84,7 @@ export function ThemeProvider({ children }) {
   }, []);
 
   const toggleTheme = React.useCallback(() => {
-    const current = readStoredOrSystemTheme();
+    const current = readStoredTheme();
     setTheme(current === "dark" ? "light" : "dark");
   }, [setTheme]);
 

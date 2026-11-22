@@ -144,9 +144,9 @@ The client app is configured for standard Next.js deployment (including Vercel):
 
 ## API Configuration
 
-All service modules (`authService`, `profileService`, `equipmentService`, `imageUploadService`, `favoriteService`, `bookingService`, `paymentService`, `customerService`, `ownerAnalyticsService`, `adminAnalyticsService`, `adminUserService`, `adminEquipmentService`, `adminRentalService`) read `NEXT_PUBLIC_API_BASE_URL` via centralized [`src/lib/apiClient.js`](src/lib/apiClient.js) and [`src/lib/auth-client.js`](src/lib/auth-client.js) without hardcoded component URLs or fake data overrides on API failure.
+All service modules (`authService`, `contactService`, `profileService`, `equipmentService`, `imageUploadService`, `favoriteService`, `bookingService`, `paymentService`, `customerService`, `ownerAnalyticsService`, `adminAnalyticsService`, `adminUserService`, `adminEquipmentService`, `adminRentalService`) read `NEXT_PUBLIC_API_BASE_URL` via centralized [`src/lib/apiClient.js`](src/lib/apiClient.js) and [`src/lib/auth-client.js`](src/lib/auth-client.js) without hardcoded component URLs or fake data overrides on API failure.
 
 ## Known Limitations
 
-- **Express Backend Pending:** The companion `server/` application is not yet implemented, so live database persistence, Better Auth server routes (`/api/auth/*`), MongoDB aggregations, owner image upload proxying, Stripe Checkout session creation (`POST /api/payments/create-checkout-session`), and Stripe webhook fulfillment (`checkout.session.completed`) remain awaiting backend development and end-to-end integration testing.
+- **Express Backend Pending:** The companion `server/` application is not yet implemented, so live database persistence, Better Auth server routes (`/api/auth/*`), MongoDB aggregations, owner image upload proxying, `POST /api/contact` inquiry persistence, Stripe Checkout session creation (`POST /api/payments/create-checkout-session`), and Stripe webhook fulfillment (`checkout.session.completed`) remain awaiting backend development and end-to-end integration testing.
 - **Public Catalog Fallback:** Public `/equipment` discovery gracefully supports curated demo preview records when the backend API is unreachable or unconfigured, clearly distinguished from live authenticated dashboard modules which require a running Express server.
