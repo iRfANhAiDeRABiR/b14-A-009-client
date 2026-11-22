@@ -137,8 +137,10 @@ export async function registerWithEmail({ name, email, password, image = "" }) {
   const user = sessionResult?.data?.user || result?.data?.user || null;
   const session = sessionResult?.data?.session || null;
 
-  if (!user) {
-    throw new Error("Account creation response was incomplete. Please sign in to continue.");
+  if (!user || !session) {
+    throw new Error(
+      "Account created, but your browser blocked the session cookie. Allow cookies for this site or try again."
+    );
   }
 
   await getAccessToken({ forceRefresh: true }).catch(() => null);
@@ -174,9 +176,9 @@ export async function loginWithEmail({ email, password }) {
   const user = sessionResult?.data?.user || result?.data?.user || null;
   const session = sessionResult?.data?.session || null;
 
-  if (!user) {
+  if (!user || !session) {
     throw new Error(
-      "Sign-in succeeded, but no active session could be established. Confirm backend cookies/CORS settings."
+      "Sign-in verified your credentials, but your browser did not retain the session cookie. Ensure cookies are enabled for this site."
     );
   }
 

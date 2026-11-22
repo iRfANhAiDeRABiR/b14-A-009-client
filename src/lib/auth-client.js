@@ -37,8 +37,11 @@ async function unconfiguredAuthFetch(input) {
   );
 }
 
+const RESOLVED_BROWSER_BASE_URL =
+  typeof window !== "undefined" ? window.location.origin : AUTH_API_BASE_URL;
+
 export const authClient = createAuthClient({
-  ...(isAuthBackendConfigured ? { baseURL: AUTH_API_BASE_URL } : {}),
+  ...(RESOLVED_BROWSER_BASE_URL ? { baseURL: RESOLVED_BROWSER_BASE_URL } : {}),
   basePath: "/api/auth",
   plugins: [jwtClient()],
   fetchOptions: {

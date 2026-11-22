@@ -39,10 +39,14 @@ export function ProtectedRoute({
   const notifiedExpiredRef = React.useRef(false);
 
   const destinationPath = React.useMemo(() => {
-    if (typeof window === "undefined") {
-      return pathname;
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname === pathname &&
+      window.location.search
+    ) {
+      return `${pathname}${window.location.search}`;
     }
-    return `${pathname}${window.location.search || ""}`;
+    return pathname;
   }, [pathname]);
 
   const unauthenticatedLoginUrl = React.useMemo(

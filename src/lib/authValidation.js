@@ -90,18 +90,34 @@ export function sanitizeRedirectPath(target, fallback = "/") {
   }
 
   const trimmed = target.trim();
+  let cleanPath = trimmed;
+
+  try {
+    const parsed = new URL(trimmed, "http://gearnest.local");
+    if (parsed.origin !== "http://gearnest.local") {
+      return safeFallback;
+    }
+    parsed.searchParams.delete("callbackURL");
+    parsed.searchParams.delete("redirectTo");
+    parsed.searchParams.delete("reason");
+    parsed.searchParams.delete("authError");
+    cleanPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return safeFallback;
+  }
+
   if (
-    trimmed === "/login" ||
-    trimmed.startsWith("/login?") ||
-    trimmed.startsWith("/login/") ||
-    trimmed === "/register" ||
-    trimmed.startsWith("/register?") ||
-    trimmed.startsWith("/register/")
+    cleanPath === "/login" ||
+    cleanPath.startsWith("/login?") ||
+    cleanPath.startsWith("/login/") ||
+    cleanPath === "/register" ||
+    cleanPath.startsWith("/register?") ||
+    cleanPath.startsWith("/register/")
   ) {
     return safeFallback;
   }
 
-  return trimmed;
+  return cleanPath;
 }
 
 export function getCallbackPathFromSearchParams(searchParams) {
