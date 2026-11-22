@@ -32,6 +32,7 @@ src/
   components/
     auth/            # AuthLayout, LoginForm, RegisterForm, GoogleLoginButton, PasswordInput, ProtectedRoute, 403/Session states
     customer/        # CustomerOverview, CustomerStats, MonthlyRentalChart, RecentRentals, FavoritePreview, MyRentalsTable, BookingDetailsModal, BookingHistoryFilters, BookingPaymentSummary, FavoritesTable, FavoriteFilters, FavoriteEquipmentCard, RemoveFavoriteDialog, FavoriteEmptyState, ProfileForm
+    owner/           # OwnerAnalyticsOverview, OwnerDashboardHeader, OwnerStatsCards, OwnerEarningsChart, OwnerRentalChart, OwnerEquipmentPerformance, OwnerRecentRentals, OwnerQuickActions
     dashboard/       # DashboardLayout, DashboardSidebar, DashboardHeader, DashboardMobileNav, DashboardBreadcrumbs, DashboardUserMenu, Skeletons
     equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
@@ -40,9 +41,9 @@ src/
     ui/              # Design system components (Button, Input, Badge, Card, ConfirmDialog, SectionHeading, Container, Skeleton, ToastViewport)
   context/           # React context providers (AuthProvider, FavoriteProvider, ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
-  lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient, validation, customerUtils, roleNavigation & pricing
-  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings)
-  services/          # API client services (authService, customerService, equipmentService, favoriteService, bookingService, profileService)
+  lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient, validation, customerUtils, ownerUtils, roleNavigation & pricing
+  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings, useOwnerAnalytics)
+  services/          # API client services (authService, customerService, ownerAnalyticsService, equipmentService, favoriteService, bookingService, profileService)
 public/
   images/            # Curated local imagery
   icons/             # Brand mark and vector assets

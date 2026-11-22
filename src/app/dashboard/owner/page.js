@@ -1,18 +1,11 @@
-import { DashboardPlaceholderView } from "@/components/dashboard/DashboardPlaceholderView";
-import { USER_ROLES } from "@/lib/roleNavigation";
+import { OwnerAnalyticsOverview } from "@/components/owner/OwnerAnalyticsOverview";
 
 export const metadata = {
-  title: "Owner Overview",
+  title: "Owner Business Dashboard",
+  description:
+    "Track your equipment performance, monitor rental activity and understand your business earnings with GearNest.",
 };
 
 export default function OwnerOverviewPage() {
-  return (
-    <DashboardPlaceholderView
-      portalRole={USER_ROLES.OWNER}
-      title="Owner Overview"
-      description="Manage listed inventory, approval status updates, incoming reservations, and rental payouts from one dedicated owner portal."
-      milestoneNote="Owner inventory metrics and rental analytics will connect via role-protected Express APIs in upcoming commits."
-      showQuickNavigation
-    />
-  );
+  return <OwnerAnalyticsOverview />;
 }
