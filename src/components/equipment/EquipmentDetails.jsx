@@ -241,20 +241,107 @@ export function EquipmentDetails({ equipmentId }) {
             </div>
           ) : null}
 
-          {/* Unified 2-Column Product Layout */}
+          {/* Unified 2-Column Product Layout with Side-by-Side Row Alignment */}
           <motion.div
             {...entranceProps}
-            className="grid items-start gap-8 lg:grid-cols-12 lg:gap-10"
+            className="grid items-stretch gap-6 lg:grid-cols-12 lg:gap-8"
           >
-            {/* Left Column: Image Gallery, Description & Technical Specifications */}
-            <div className="min-w-0 space-y-6 lg:col-span-7">
+            {/* Row 1: Image Gallery (Left) & Pricing / Booking Actions (Right) */}
+            <div className="min-w-0 lg:col-span-7">
               <EquipmentGallery
                 images={item.images}
                 name={item.name}
                 alt={item.imageAlt}
+                className="h-full"
               />
+            </div>
 
-              <Card className="rounded-2xl">
+            <div className="min-w-0 lg:col-span-5">
+              <Card className="flex h-full flex-col justify-between gap-5 rounded-2xl">
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Badge variant="primary" size="md">
+                      {item.category}
+                    </Badge>
+                    <Badge variant={availability.variant} dot size="md">
+                      {availability.label}
+                    </Badge>
+                  </div>
+
+                  <h1 className="type-page-title mt-4 text-foreground">
+                    {item.name}
+                  </h1>
+
+                  <p className="mt-2.5 inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary">
+                    <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />
+                    <span>{item.location}</span>
+                  </p>
+                </div>
+
+                <div>
+                  <div className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-background p-4">
+                    <div>
+                      <p className="text-xs font-medium text-text-secondary">
+                        Rental Price
+                      </p>
+                      <p className="mt-0.5 font-heading text-2xl font-bold text-primary tabular-nums">
+                        {formatCurrencyBDT(item.rentalPrice)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-text-secondary">
+                        Rental Type
+                      </p>
+                      <p className="mt-1 font-heading text-base font-semibold text-foreground">
+                        {item.rentalType}
+                      </p>
+                    </div>
+                    <div className="col-span-2 border-t border-border pt-2.5 text-xs text-text-secondary">
+                      Available Quantity:{" "}
+                      <span className="font-semibold text-foreground tabular-nums">
+                        {item.availableQuantity}{" "}
+                        {item.availableQuantity === 1 ? "unit" : "units"}
+                      </span>
+                      {source === "demo" ? (
+                        <span className="ml-2 rounded bg-surface-subtle px-2 py-0.5 text-[11px] font-medium">
+                          Demo Record
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      fullWidth
+                      disabled={!canBook}
+                      onClick={() => setBookingModalOpen(true)}
+                    >
+                      <CalendarCheck aria-hidden="true" className="size-4" />
+                      <span>{canBook ? "Book Now" : "Currently Unavailable"}</span>
+                    </Button>
+
+                    <FavoriteButton
+                      isFavorite={isFavorite}
+                      isLoading={favoriteLoading}
+                      disabled={isNonCustomerRole}
+                      helperText={
+                        isNonCustomerRole
+                          ? "Favorites are only available to Customer accounts."
+                          : ""
+                      }
+                      errorMessage={favoriteError}
+                      onClick={toggleFavorite}
+                    />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Row 2: Equipment Description (Left) & Owner Information (Right) */}
+            <div className="min-w-0 lg:col-span-7">
+              <Card className="flex h-full flex-col rounded-2xl">
                 <h2 className="type-card-title text-foreground">
                   Equipment Description
                 </h2>
@@ -262,98 +349,27 @@ export function EquipmentDetails({ equipmentId }) {
                   {item.description}
                 </p>
               </Card>
-
-              <EquipmentSpecifications equipment={item} />
             </div>
 
-            {/* Right Column: Pricing, Actions, Owner Summary & Rental Terms */}
-            <div className="min-w-0 space-y-6 lg:col-span-5">
-              <Card className="rounded-2xl">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Badge variant="primary" size="md">
-                    {item.category}
-                  </Badge>
-                  <Badge variant={availability.variant} dot size="md">
-                    {availability.label}
-                  </Badge>
-                </div>
-
-                <h1 className="type-page-title mt-4 text-foreground">
-                  {item.name}
-                </h1>
-
-                <p className="mt-2.5 inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary">
-                  <MapPin aria-hidden="true" className="size-4 shrink-0 text-primary" />
-                  <span>{item.location}</span>
-                </p>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl border border-border bg-background p-4">
-                  <div>
-                    <p className="text-xs font-medium text-text-secondary">
-                      Rental Price
-                    </p>
-                    <p className="mt-0.5 font-heading text-2xl font-bold text-primary tabular-nums">
-                      {formatCurrencyBDT(item.rentalPrice)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-text-secondary">
-                      Rental Type
-                    </p>
-                    <p className="mt-1 font-heading text-base font-semibold text-foreground">
-                      {item.rentalType}
-                    </p>
-                  </div>
-                  <div className="col-span-2 border-t border-border pt-2.5 text-xs text-text-secondary">
-                    Available Quantity:{" "}
-                    <span className="font-semibold text-foreground tabular-nums">
-                      {item.availableQuantity}{" "}
-                      {item.availableQuantity === 1 ? "unit" : "units"}
-                    </span>
-                    {source === "demo" ? (
-                      <span className="ml-2 rounded bg-surface-subtle px-2 py-0.5 text-[11px] font-medium">
-                        Demo Record
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-5 space-y-3">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    disabled={!canBook}
-                    onClick={() => setBookingModalOpen(true)}
-                  >
-                    <CalendarCheck aria-hidden="true" className="size-4" />
-                    <span>{canBook ? "Book Now" : "Currently Unavailable"}</span>
-                  </Button>
-
-                  <FavoriteButton
-                    isFavorite={isFavorite}
-                    isLoading={favoriteLoading}
-                    disabled={isNonCustomerRole}
-                    helperText={
-                      isNonCustomerRole
-                        ? "Favorites are only available to Customer accounts."
-                        : ""
-                    }
-                    errorMessage={favoriteError}
-                    onClick={toggleFavorite}
-                  />
-                </div>
-              </Card>
-
+            <div className="min-w-0 lg:col-span-5">
               <EquipmentOwnerCard
                 owner={item.owner}
                 location={item.location}
                 isAuthenticated={auth.isAuthenticated}
+                className="h-full"
               />
+            </div>
 
+            {/* Row 3: Equipment Specifications (Left) & Rental Terms (Right) */}
+            <div className="min-w-0 lg:col-span-7">
+              <EquipmentSpecifications equipment={item} className="h-full" />
+            </div>
+
+            <div className="min-w-0 lg:col-span-5">
               <RentalTerms
                 rentalTerms={item.rentalTerms}
                 rentalType={item.rentalType}
+                className="h-full"
               />
             </div>
           </motion.div>

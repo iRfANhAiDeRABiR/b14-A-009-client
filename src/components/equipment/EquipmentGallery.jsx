@@ -6,7 +6,12 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 
-export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
+export function EquipmentGallery({
+  images = [],
+  name = "Equipment",
+  alt,
+  className = "",
+}) {
   const safeImages =
     Array.isArray(images) && images.length > 0
       ? images
@@ -33,8 +38,8 @@ export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
   }, []);
 
   return (
-    <Card padding="sm" className="rounded-2xl">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-surface-subtle">
+    <Card padding="sm" className={cn("flex h-full flex-col rounded-2xl", className)}>
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-surface-subtle lg:flex-auto">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeSrc}

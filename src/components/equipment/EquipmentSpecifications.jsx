@@ -1,7 +1,8 @@
 import { Layers, MapPin, PackageCheck, Tag } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 
-export function EquipmentSpecifications({ equipment }) {
+export function EquipmentSpecifications({ equipment, className = "" }) {
   const baseSpecs = [
     { label: "Category", value: equipment.category, Icon: Tag },
     { label: "Rental Type", value: equipment.rentalType, Icon: Layers },
@@ -34,7 +35,7 @@ export function EquipmentSpecifications({ equipment }) {
     : [];
 
   return (
-    <Card className="rounded-2xl">
+    <Card className={cn("flex h-full flex-col rounded-2xl", className)}>
       <h2 className="type-card-title text-foreground">
         Equipment Specifications
       </h2>
