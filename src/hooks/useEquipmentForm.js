@@ -10,24 +10,39 @@ import {
   validateEquipmentImageFile,
   validateEquipmentListingForm,
 } from "@/lib/ownerUtils";
-import { createEquipmentListing } from "@/services/equipmentService";
+import {
+  createEquipmentListing,
+  updateOwnerEquipment,
+} from "@/services/equipmentService";
 import { uploadEquipmentImage } from "@/services/imageUploadService";
 
-export function useEquipmentForm() {
+export function useEquipmentForm({
+  mode = "create",
+  equipmentId = "",
+  initialValues = null,
+} = {}) {
   const router = useRouter();
   const { showToast } = useToast();
   const { token, getToken } = useAuth();
 
-  const [values, setValues] = React.useState(INITIAL_EQUIPMENT_FORM_VALUES);
+  const resolvedInitial = React.useMemo(
+    () =>
+      initialValues
+        ? { ...INITIAL_EQUIPMENT_FORM_VALUES, ...initialValues }
+        : INITIAL_EQUIPMENT_FORM_VALUES,
+    [initialValues]
+  );
+
+  const [values, setValues] = React.useState(resolvedInitial);
   const [fieldErrors, setFieldErrors] = React.useState({});
   const [formError, setFormError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const [uploadState, setUploadState] = React.useState({
-    status: "idle",
-    progress: 0,
+    status: resolvedInitial.image ? "uploaded" : "idle",
+    progress: resolvedInitial.image ? 100 : 0,
     error: "",
-    fileName: "",
+    fileName: resolvedInitial.image ? "Current hosted photo" : "",
     localPreviewUrl: "",
   });
 
@@ -47,19 +62,36 @@ export function useEquipmentForm() {
     };
   }, [revokeLocalPreview]);
 
-  const updateField = React.useCallback(
-    (field, nextValue) => {
-      setValues((prev) => ({ ...prev, [field]: nextValue }));
-      setFieldErrors((prev) => {
-        if (!prev[field]) return prev;
-        const copy = { ...prev };
-        delete copy[field];
-        return copy;
+  const applyInitialValues = React.useCallback(
+    (nextInitial) => {
+      const merged = nextInitial
+        ? { ...INITIAL_EQUIPMENT_FORM_VALUES, ...nextInitial }
+        : INITIAL_EQUIPMENT_FORM_VALUES;
+      revokeLocalPreview();
+      setValues(merged);
+      setFieldErrors({});
+      setFormError("");
+      setUploadState({
+        status: merged.image ? "uploaded" : "idle",
+        progress: merged.image ? 100 : 0,
+        error: "",
+        fileName: merged.image ? "Current hosted photo" : "",
+        localPreviewUrl: "",
       });
-      setFormError((prev) => (prev ? "" : prev));
     },
-    []
+    [revokeLocalPreview]
   );
+
+  const updateField = React.useCallback((field, nextValue) => {
+    setValues((prev) => ({ ...prev, [field]: nextValue }));
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const copy = { ...prev };
+      delete copy[field];
+      return copy;
+    });
+    setFormError((prev) => (prev ? "" : prev));
+  }, []);
 
   const handleImageFileSelect = React.useCallback(
     async (file) => {
@@ -122,7 +154,7 @@ export function useEquipmentForm() {
 
         showToast({
           title: "Image uploaded",
-          description: "Your equipment photo is ready for listing submission.",
+          description: "Your equipment photo is ready to save.",
           variant: "success",
         });
       } catch (error) {
@@ -131,14 +163,19 @@ export function useEquipmentForm() {
             ? error.message
             : "Image upload failed. Please try again.";
 
-        // Never keep a fake or unhosted image URL on upload error.
-        setValues((prev) => ({ ...prev, image: "" }));
+        // Security & UX rule: preserve existing hosted URL when editing, or stay empty in create mode.
+        revokeLocalPreview();
+        setValues((prev) => ({
+          ...prev,
+          image: mode === "edit" ? prev.image : "",
+        }));
         setFieldErrors((prev) => ({ ...prev, image: message }));
         setUploadState((prev) => ({
           ...prev,
-          status: "error",
+          status: mode === "edit" && prev.status === "uploaded" ? "uploaded" : "error",
           progress: 0,
           error: message,
+          localPreviewUrl: "",
         }));
 
         showToast({
@@ -150,7 +187,7 @@ export function useEquipmentForm() {
         uploadInFlightRef.current = false;
       }
     },
-    [getToken, isSubmitting, revokeLocalPreview, showToast, token]
+    [getToken, isSubmitting, mode, revokeLocalPreview, showToast, token]
   );
 
   const handleRemoveImage = React.useCallback(() => {
@@ -174,18 +211,8 @@ export function useEquipmentForm() {
 
   const handleResetForm = React.useCallback(() => {
     if (uploadInFlightRef.current || isSubmitting) return;
-    revokeLocalPreview();
-    setValues(INITIAL_EQUIPMENT_FORM_VALUES);
-    setFieldErrors({});
-    setFormError("");
-    setUploadState({
-      status: "idle",
-      progress: 0,
-      error: "",
-      fileName: "",
-      localPreviewUrl: "",
-    });
-  }, [isSubmitting, revokeLocalPreview]);
+    applyInitialValues(resolvedInitial);
+  }, [applyInitialValues, isSubmitting, resolvedInitial]);
 
   const handleSubmit = React.useCallback(
     async (event) => {
@@ -208,7 +235,7 @@ export function useEquipmentForm() {
       if (Object.keys(validationErrors).length > 0) {
         setFieldErrors(validationErrors);
         setFormError(
-          "Please resolve all highlighted required fields before submitting your equipment listing."
+          "Please resolve all highlighted required fields before saving."
         );
         showToast({
           title: "Validation required",
@@ -225,6 +252,26 @@ export function useEquipmentForm() {
         const activeToken =
           token || (typeof getToken === "function" ? await getToken() : null);
 
+        if (mode === "edit") {
+          const result = await updateOwnerEquipment(equipmentId, values, {
+            token: activeToken,
+          });
+
+          const serverMessage =
+            typeof result?.message === "string" && result.message.trim()
+              ? result.message.trim()
+              : "Equipment listing updated successfully.";
+
+          showToast({
+            title: "Equipment updated",
+            description: serverMessage,
+            variant: "success",
+          });
+
+          router.push("/dashboard/owner/my-equipment");
+          return { ok: true, result };
+        }
+
         const result = await createEquipmentListing(values, {
           token: activeToken,
         });
@@ -240,27 +287,17 @@ export function useEquipmentForm() {
           variant: "success",
         });
 
-        revokeLocalPreview();
-        setValues(INITIAL_EQUIPMENT_FORM_VALUES);
-        setFieldErrors({});
-        setUploadState({
-          status: "idle",
-          progress: 0,
-          error: "",
-          fileName: "",
-          localPreviewUrl: "",
-        });
-
+        applyInitialValues(INITIAL_EQUIPMENT_FORM_VALUES);
         router.push("/dashboard/owner/my-equipment");
-        return { ok: true };
+        return { ok: true, result };
       } catch (error) {
         const message =
           error instanceof Error
             ? error.message
-            : "Unable to submit equipment listing right now.";
+            : "Unable to save equipment listing right now.";
         setFormError(message);
         showToast({
-          title: "Submission failed",
+          title: mode === "edit" ? "Update failed" : "Submission failed",
           description: message,
           variant: "error",
         });
@@ -270,9 +307,11 @@ export function useEquipmentForm() {
       }
     },
     [
+      applyInitialValues,
+      equipmentId,
       getToken,
       isSubmitting,
-      revokeLocalPreview,
+      mode,
       router,
       showToast,
       token,
@@ -287,7 +326,8 @@ export function useEquipmentForm() {
     formError,
     isSubmitting,
     uploadState,
-    previewImageSrc: values.image || uploadState.localPreviewUrl || "",
+    previewImageSrc: uploadState.localPreviewUrl || values.image || "",
+    applyInitialValues,
     updateField,
     handleImageFileSelect,
     handleRemoveImage,

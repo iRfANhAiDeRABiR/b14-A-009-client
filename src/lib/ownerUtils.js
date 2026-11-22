@@ -210,6 +210,220 @@ export function buildCreateEquipmentPayload(values = {}) {
   };
 }
 
+export function buildUpdateEquipmentPayload(values = {}) {
+  return buildCreateEquipmentPayload(values);
+}
+
+function normalizeOwnerStatusFilter(rawStatus) {
+  const clean = String(rawStatus || "").trim().toLowerCase();
+  if (clean === "pending") return "Pending";
+  if (clean === "approved") return "Approved";
+  if (clean === "rejected") return "Rejected";
+  return "all";
+}
+
+function normalizeOwnerCategoryFilter(rawCategory) {
+  const clean = String(rawCategory || "").trim();
+  if (!clean || clean.toLowerCase() === "all") return "all";
+  const match = ALLOWED_EQUIPMENT_CATEGORIES.find(
+    (cat) => cat.toLowerCase() === clean.toLowerCase()
+  );
+  return match || "all";
+}
+
+function normalizeOwnerSortOption(rawSort) {
+  const clean = String(rawSort || "").trim();
+  const match = OWNER_EQUIPMENT_SORT_OPTIONS.find((opt) => opt.value === clean);
+  return match ? match.value : "newest";
+}
+
+export function parseOwnerEquipmentFiltersFromParams(searchParams) {
+  const getParam = (key) =>
+    typeof searchParams?.get === "function"
+      ? searchParams.get(key)
+      : searchParams?.[key];
+
+  const rawPage = Number(getParam("page"));
+
+  return {
+    search: String(getParam("search") || "").trim(),
+    category: normalizeOwnerCategoryFilter(getParam("category")),
+    status: normalizeOwnerStatusFilter(getParam("status")),
+    sort: normalizeOwnerSortOption(getParam("sort")),
+    page: Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1,
+    limit: DEFAULT_OWNER_EQUIPMENT_LIMIT,
+  };
+}
+
+export function buildOwnerEquipmentQueryString(filters = {}) {
+  const params = new URLSearchParams();
+
+  const search = String(filters.search || "").trim();
+  if (search) params.set("search", search);
+
+  const category = normalizeOwnerCategoryFilter(filters.category);
+  if (category !== "all") params.set("category", category);
+
+  const status = normalizeOwnerStatusFilter(filters.status);
+  if (status !== "all") params.set("status", status);
+
+  const sort = normalizeOwnerSortOption(filters.sort);
+  if (sort !== "newest") params.set("sort", sort);
+
+  const page = Number(filters.page);
+  if (Number.isFinite(page) && page > 1) {
+    params.set("page", String(Math.floor(page)));
+  }
+
+  return params.toString();
+}
+
+export function normalizeOwnerEquipmentItem(raw) {
+  if (!raw || typeof raw !== "object") return null;
+
+  const id = raw._id || raw.id || "";
+  if (!id && !raw.name) return null;
+
+  const images =
+    Array.isArray(raw.images) && raw.images.length > 0
+      ? raw.images.filter(Boolean)
+      : raw.image
+        ? [raw.image]
+        : [];
+
+  const availableQty = toOptionalNonNegativeNumber(raw.availableQuantity);
+  const statusBadge = getApprovalStatusBadge(raw.status || raw.approvalStatus || "Pending");
+  const ownerObj =
+    raw.owner && typeof raw.owner === "object"
+      ? {
+          _id: raw.owner._id ? String(raw.owner._id) : "",
+          name: String(raw.owner.name || ""),
+          email: String(raw.owner.email || ""),
+          image: String(raw.owner.image || raw.owner.photoURL || ""),
+        }
+      : null;
+
+  return {
+    _id: String(id),
+    name: String(raw.name || "Untitled Equipment"),
+    description: String(raw.description || ""),
+    category: String(raw.category || ""),
+    location: String(raw.location || ""),
+    rentalPrice: toOptionalNonNegativeNumber(raw.rentalPrice),
+    rentalType: String(raw.rentalType || "Daily"),
+    availableQuantity: availableQty !== null ? Math.floor(availableQty) : 0,
+    condition: String(raw.condition || ""),
+    brand: String(raw.brand || ""),
+    model: String(raw.model || ""),
+    image: String(raw.image || images[0] || "/images/hero-equipment.jpg"),
+    images,
+    rentalTerms: String(raw.rentalTerms || raw.terms || ""),
+    status: statusBadge.label,
+    rejectionReason: String(
+      raw.rejectionReason || raw.adminNote || raw.reviewNote || ""
+    ).trim(),
+    owner: ownerObj,
+    availabilityStatus:
+      raw.availabilityStatus ||
+      (availableQty !== null && availableQty > 0 ? "Available" : "Unavailable"),
+    createdAt: raw.createdAt || "",
+    updatedAt: raw.updatedAt || "",
+  };
+}
+
+export function mapEquipmentToFormValues(item) {
+  if (!item || typeof item !== "object") {
+    return { ...INITIAL_EQUIPMENT_FORM_VALUES };
+  }
+
+  return {
+    name: String(item.name || ""),
+    description: String(item.description || ""),
+    category: ALLOWED_EQUIPMENT_CATEGORIES.includes(item.category)
+      ? item.category
+      : "",
+    location: String(item.location || ""),
+    rentalPrice:
+      item.rentalPrice !== null && item.rentalPrice !== undefined
+        ? String(item.rentalPrice)
+        : "",
+    rentalType: ALLOWED_RENTAL_TYPES.includes(item.rentalType)
+      ? item.rentalType
+      : "Daily",
+    availableQuantity:
+      item.availableQuantity !== null && item.availableQuantity !== undefined
+        ? String(Math.max(1, Math.floor(Number(item.availableQuantity) || 1)))
+        : "1",
+    condition: String(item.condition || ""),
+    brand: String(item.brand || ""),
+    model: String(item.model || ""),
+    image:
+      typeof item.image === "string" && /^https?:\/\//i.test(item.image.trim())
+        ? item.image.trim()
+        : "",
+    rentalTerms: String(item.rentalTerms || ""),
+  };
+}
+
+export function computeOwnerEquipmentStats(
+  items = [],
+  backendSummary = null,
+  paginationTotal = null
+) {
+  if (backendSummary && typeof backendSummary === "object") {
+    const total = toOptionalNonNegativeNumber(
+      backendSummary.totalEquipment ?? backendSummary.total
+    );
+    const pending = toOptionalNonNegativeNumber(
+      backendSummary.pending ?? backendSummary.pendingCount
+    );
+    const approved = toOptionalNonNegativeNumber(
+      backendSummary.approved ?? backendSummary.approvedCount
+    );
+    const rejected = toOptionalNonNegativeNumber(
+      backendSummary.rejected ?? backendSummary.rejectedCount
+    );
+
+    if (
+      total !== null &&
+      pending !== null &&
+      approved !== null &&
+      rejected !== null
+    ) {
+      return {
+        total: Math.floor(total),
+        pending: Math.floor(pending),
+        approved: Math.floor(approved),
+        rejected: Math.floor(rejected),
+      };
+    }
+  }
+
+  const safeList = Array.isArray(items) ? items : [];
+  let pending = 0;
+  let approved = 0;
+  let rejected = 0;
+
+  for (const item of safeList) {
+    const normalizedStatus = String(item?.status || "")
+      .trim()
+      .toLowerCase();
+    if (normalizedStatus === "pending") pending += 1;
+    else if (normalizedStatus === "approved") approved += 1;
+    else if (normalizedStatus === "rejected") rejected += 1;
+  }
+
+  return {
+    total:
+      typeof paginationTotal === "number" && paginationTotal >= safeList.length
+        ? Math.floor(paginationTotal)
+        : safeList.length,
+    pending,
+    approved,
+    rejected,
+  };
+}
+
 export const OWNER_PERIOD_OPTIONS = [
   { label: "Last 3 Months", value: "3m" },
   { label: "Last 6 Months", value: "6m" },
@@ -217,6 +431,22 @@ export const OWNER_PERIOD_OPTIONS = [
 ];
 
 export const DEFAULT_OWNER_PERIOD = "6m";
+
+export const DEFAULT_OWNER_EQUIPMENT_LIMIT = 10;
+
+export const OWNER_EQUIPMENT_STATUS_OPTIONS = [
+  { label: "All Status", value: "all" },
+  { label: "Pending", value: "Pending" },
+  { label: "Approved", value: "Approved" },
+  { label: "Rejected", value: "Rejected" },
+];
+
+export const OWNER_EQUIPMENT_SORT_OPTIONS = [
+  { label: "Recently Added", value: "newest" },
+  { label: "Name: A to Z", value: "name_asc" },
+  { label: "Price: Low to High", value: "price_asc" },
+  { label: "Price: High to Low", value: "price_desc" },
+];
 
 const APPROVAL_BADGE_VARIANTS = {
   approved: "success",

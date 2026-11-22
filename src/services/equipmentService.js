@@ -1,5 +1,11 @@
 import { ApiError, apiRequest } from "@/lib/apiClient";
-import { buildCreateEquipmentPayload } from "@/lib/ownerUtils";
+import {
+  buildCreateEquipmentPayload,
+  buildUpdateEquipmentPayload,
+  computeOwnerEquipmentStats,
+  DEFAULT_OWNER_EQUIPMENT_LIMIT,
+  normalizeOwnerEquipmentItem,
+} from "@/lib/ownerUtils";
 import { getAccessToken } from "@/lib/token-provider";
 import {
   DEMO_CATALOG_EQUIPMENT,
@@ -440,6 +446,271 @@ export async function createEquipmentListing(
   return apiRequest("/api/equipment", {
     method: "POST",
     body: sanitizedBody,
+    token: activeToken,
+    authRequired: true,
+  });
+}
+
+/**
+ * Fetch the currently authenticated owner's equipment listings (including Pending & Rejected):
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/equipment/my?search=...&category=...&status=...&sort=...&page=1&limit=10
+ */
+export async function getMyEquipment({
+  search = "",
+  category = "all",
+  status = "all",
+  sort = "newest",
+  page = 1,
+  limit = DEFAULT_OWNER_EQUIPMENT_LIMIT,
+  token = null,
+} = {}) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw new ApiError("Authentication required to view your equipment listings.", {
+      status: 401,
+      code: "UNAUTHORIZED",
+      requiresAuth: true,
+    });
+  }
+
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Owner equipment API endpoint (GET /api/equipment/my) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      {
+        status: 503,
+        code: "SERVICE_UNAVAILABLE",
+      }
+    );
+  }
+
+  const params = new URLSearchParams();
+  const safePage =
+    Number.isFinite(Number(page)) && Number(page) >= 1
+      ? Math.floor(Number(page))
+      : 1;
+  const safeLimit =
+    Number.isFinite(Number(limit)) && Number(limit) >= 1
+      ? Math.floor(Number(limit))
+      : DEFAULT_OWNER_EQUIPMENT_LIMIT;
+
+  params.set("page", String(safePage));
+  params.set("limit", String(safeLimit));
+
+  if (search && String(search).trim()) {
+    params.set("search", String(search).trim());
+  }
+  if (category && category !== "all") {
+    params.set("category", category);
+  }
+  if (status && status !== "all") {
+    params.set("status", status);
+  }
+  if (sort && sort !== "newest") {
+    params.set("sort", sort);
+  }
+
+  const payload = await apiRequest(`/api/equipment/my?${params.toString()}`, {
+    method: "GET",
+    token: activeToken,
+    authRequired: true,
+  });
+
+  const rawList = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.equipment)
+        ? payload.equipment
+        : [];
+
+  const items = rawList.map(normalizeOwnerEquipmentItem).filter(Boolean);
+  const rawPagination = payload?.pagination || payload?.meta || null;
+
+  const hasServerPagination = Boolean(
+    rawPagination &&
+      (typeof rawPagination.totalItems === "number" ||
+        typeof rawPagination.total === "number" ||
+        typeof rawPagination.totalPages === "number")
+  );
+
+  const totalItems = hasServerPagination
+    ? Number(rawPagination.totalItems ?? rawPagination.total ?? items.length)
+    : items.length;
+  const resolvedLimit = Number(rawPagination?.limit || safeLimit);
+  const currentPage = Number(
+    rawPagination?.currentPage ?? rawPagination?.page ?? safePage
+  );
+  const totalPages = hasServerPagination
+    ? Math.max(
+        totalItems > 0 ? 1 : 0,
+        Number(
+          rawPagination.totalPages ??
+            Math.ceil(totalItems / Math.max(1, resolvedLimit))
+        )
+      )
+    : items.length > 0
+      ? 1
+      : 0;
+
+  const summary =
+    payload?.summary ||
+    payload?.statusBreakdown ||
+    payload?.equipmentStatusBreakdown ||
+    null;
+
+  return {
+    items,
+    stats: computeOwnerEquipmentStats(items, summary, totalItems),
+    pagination: {
+      currentPage,
+      limit: resolvedLimit,
+      totalItems,
+      totalPages,
+      serverPaginationSupported: hasServerPagination,
+    },
+  };
+}
+
+/**
+ * Fetch an owned equipment record by ID preserving Pending and Rejected statuses:
+ * GET {NEXT_PUBLIC_API_BASE_URL}/api/equipment/:id
+ */
+export async function getOwnerEquipmentById(equipmentId, { token = null } = {}) {
+  const cleanId = decodeURIComponent(String(equipmentId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("Equipment ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw new ApiError("Authentication required to inspect owned equipment.", {
+      status: 401,
+      code: "UNAUTHORIZED",
+      requiresAuth: true,
+    });
+  }
+
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Equipment detail endpoint (GET /api/equipment/:id) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      {
+        status: 503,
+        code: "SERVICE_UNAVAILABLE",
+      }
+    );
+  }
+
+  const payload = await apiRequest(
+    `/api/equipment/${encodeURIComponent(cleanId)}`,
+    {
+      method: "GET",
+      token: activeToken,
+      authRequired: true,
+    }
+  );
+
+  const record =
+    payload?.data && typeof payload.data === "object"
+      ? payload.data
+      : payload?.equipment && typeof payload.equipment === "object"
+        ? payload.equipment
+        : payload;
+
+  const normalized = normalizeOwnerEquipmentItem(record);
+  if (!normalized) {
+    throw new ApiError("Requested equipment record was not found.", {
+      status: 404,
+      code: "NOT_FOUND",
+    });
+  }
+
+  return normalized;
+}
+
+/**
+ * Update editable fields of an owned equipment listing:
+ * PATCH {NEXT_PUBLIC_API_BASE_URL}/api/equipment/:id
+ * Strictly strips ownerId and approval status so only authorized Admins approve listings.
+ */
+export async function updateOwnerEquipment(
+  equipmentId,
+  formValues,
+  { token = null } = {}
+) {
+  const cleanId = decodeURIComponent(String(equipmentId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("Equipment ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw new ApiError("Authentication required to update equipment.", {
+      status: 401,
+      code: "UNAUTHORIZED",
+      requiresAuth: true,
+    });
+  }
+
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Equipment update endpoint (PATCH /api/equipment/:id) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      {
+        status: 503,
+        code: "SERVICE_UNAVAILABLE",
+      }
+    );
+  }
+
+  const sanitizedBody = buildUpdateEquipmentPayload(formValues);
+
+  return apiRequest(`/api/equipment/${encodeURIComponent(cleanId)}`, {
+    method: "PATCH",
+    body: sanitizedBody,
+    token: activeToken,
+    authRequired: true,
+  });
+}
+
+/**
+ * Delete an owned equipment listing:
+ * DELETE {NEXT_PUBLIC_API_BASE_URL}/api/equipment/:id
+ */
+export async function deleteOwnerEquipment(equipmentId, { token = null } = {}) {
+  const cleanId = decodeURIComponent(String(equipmentId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("Equipment ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw new ApiError("Authentication required to delete equipment.", {
+      status: 401,
+      code: "UNAUTHORIZED",
+      requiresAuth: true,
+    });
+  }
+
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Equipment delete endpoint (DELETE /api/equipment/:id) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      {
+        status: 503,
+        code: "SERVICE_UNAVAILABLE",
+      }
+    );
+  }
+
+  return apiRequest(`/api/equipment/${encodeURIComponent(cleanId)}`, {
+    method: "DELETE",
     token: activeToken,
     authRequired: true,
   });

@@ -223,6 +223,7 @@ const SEGMENT_LABELS = {
   profile: "My Profile",
   "add-equipment": "Add Equipment",
   "my-equipment": "My Equipment",
+  edit: "Edit Equipment",
   rentals: "Rentals",
   users: "All Users",
   equipment: "All Equipment",
