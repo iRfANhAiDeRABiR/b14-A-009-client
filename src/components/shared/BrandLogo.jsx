@@ -61,7 +61,7 @@ export function BrandLogo({ tone = "dark", className }) {
             "font-heading text-xl font-bold tracking-tight",
             isLightText
               ? "text-white"
-              : "text-[#193D34] dark:text-[#EDF2EE]"
+              : "text-[var(--color-brand-wordmark,#193D34)]"
           )}
         >
           Gear<span className="text-accent">Nest</span>

@@ -18,6 +18,7 @@
   --color-border: #E5E9E3;
   --color-accent: #D9A441;
   --color-accent-foreground: #202923;
+  --color-brand-wordmark: #193D34;
 
   /* Semantic Status Palette */
   --color-success: #1E6B47;
@@ -102,6 +103,7 @@
   --color-border: #283A32;
   --color-accent: #D9A441;
   --color-accent-foreground: #141B18;
+  --color-brand-wordmark: #EDF2EE;
 
   --color-success: #5FD397;
   --color-success-bg: #122E20;
