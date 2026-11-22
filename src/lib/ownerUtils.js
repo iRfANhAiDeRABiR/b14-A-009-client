@@ -1,9 +1,214 @@
+import { validateImageUrl } from "./authValidation.js";
 import {
   formatBookingDuration,
   formatDisplayDate,
   getBookingStatusBadge,
   getPaymentStatusBadge,
 } from "./customerUtils.js";
+
+export const ALLOWED_EQUIPMENT_CATEGORIES = [
+  "Construction Equipment",
+  "Photography Equipment",
+  "Vehicles & Transportation",
+  "Agriculture Equipment",
+  "Electronics",
+  "Event Equipment",
+];
+
+export const ALLOWED_RENTAL_TYPES = ["Daily", "Weekly", "Monthly"];
+
+export const EQUIPMENT_CONDITION_OPTIONS = [
+  "Like New",
+  "Excellent",
+  "Good",
+  "Fair",
+  "Refurbished",
+];
+
+export const EQUIPMENT_FORM_LIMITS = {
+  nameMin: 3,
+  nameMax: 100,
+  descriptionMin: 20,
+  descriptionMax: 1500,
+  locationMin: 2,
+  locationMax: 120,
+  brandMax: 80,
+  modelMax: 80,
+  termsMin: 10,
+  termsMax: 1500,
+};
+
+export const INITIAL_EQUIPMENT_FORM_VALUES = {
+  name: "",
+  description: "",
+  category: "",
+  location: "",
+  rentalPrice: "",
+  rentalType: "Daily",
+  availableQuantity: "1",
+  condition: "",
+  brand: "",
+  model: "",
+  image: "",
+  rentalTerms: "",
+};
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+
+const ALLOWED_IMAGE_EXTENSIONS = /\.(jpe?g|png|webp)$/i;
+
+export const MAX_EQUIPMENT_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export function validateEquipmentImageFile(file) {
+  if (!file) {
+    return "Please choose an equipment image file.";
+  }
+
+  const mime = String(file.type || "").toLowerCase();
+  const fileName = String(file.name || "");
+  const isValidType =
+    ALLOWED_IMAGE_MIME_TYPES.has(mime) ||
+    (!mime && ALLOWED_IMAGE_EXTENSIONS.test(fileName));
+
+  if (!isValidType) {
+    return "Unsupported file type. Upload a JPG, JPEG, PNG, or WEBP image.";
+  }
+
+  if (typeof file.size === "number") {
+    if (file.size <= 0) {
+      return "Selected image file is empty.";
+    }
+    if (file.size > MAX_EQUIPMENT_IMAGE_BYTES) {
+      return "Equipment image must be 5 MB or smaller.";
+    }
+  }
+
+  return "";
+}
+
+export function validateEquipmentListingForm(values = {}) {
+  const errors = {};
+
+  const name = String(values.name || "").trim();
+  if (!name) {
+    errors.name = "Equipment name is required.";
+  } else if (name.length < EQUIPMENT_FORM_LIMITS.nameMin) {
+    errors.name = `Equipment name must be at least ${EQUIPMENT_FORM_LIMITS.nameMin} characters.`;
+  } else if (name.length > EQUIPMENT_FORM_LIMITS.nameMax) {
+    errors.name = `Equipment name cannot exceed ${EQUIPMENT_FORM_LIMITS.nameMax} characters.`;
+  }
+
+  const description = String(values.description || "").trim();
+  if (!description) {
+    errors.description = "Equipment description is required.";
+  } else if (description.length < EQUIPMENT_FORM_LIMITS.descriptionMin) {
+    errors.description = `Please enter at least ${EQUIPMENT_FORM_LIMITS.descriptionMin} characters describing the equipment.`;
+  } else if (description.length > EQUIPMENT_FORM_LIMITS.descriptionMax) {
+    errors.description = `Description cannot exceed ${EQUIPMENT_FORM_LIMITS.descriptionMax} characters.`;
+  }
+
+  const category = String(values.category || "").trim();
+  if (!ALLOWED_EQUIPMENT_CATEGORIES.includes(category)) {
+    errors.category = "Select a valid equipment category.";
+  }
+
+  const location = String(values.location || "").trim();
+  if (!location) {
+    errors.location = "Rental location is required.";
+  } else if (location.length < EQUIPMENT_FORM_LIMITS.locationMin) {
+    errors.location = "Enter a valid rental location (e.g., Gazipur, Dhaka).";
+  } else if (location.length > EQUIPMENT_FORM_LIMITS.locationMax) {
+    errors.location = `Location cannot exceed ${EQUIPMENT_FORM_LIMITS.locationMax} characters.`;
+  }
+
+  const rawPrice = String(values.rentalPrice ?? "").trim();
+  const numericPrice = Number(rawPrice);
+  if (!rawPrice) {
+    errors.rentalPrice = "Rental price is required.";
+  } else if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
+    errors.rentalPrice = "Rental price must be a positive number greater than 0.";
+  }
+
+  const rentalType = String(values.rentalType || "").trim();
+  if (!ALLOWED_RENTAL_TYPES.includes(rentalType)) {
+    errors.rentalType = "Select Daily, Weekly, or Monthly as the rental type.";
+  }
+
+  const rawQty = String(values.availableQuantity ?? "").trim();
+  const numericQty = Number(rawQty);
+  if (!rawQty) {
+    errors.availableQuantity = "Available quantity is required.";
+  } else if (!Number.isInteger(numericQty) || numericQty < 1) {
+    errors.availableQuantity =
+      "Available quantity must be a whole number of at least 1.";
+  }
+
+  const condition = String(values.condition || "").trim();
+  if (!condition) {
+    errors.condition = "Equipment condition is required.";
+  }
+
+  const brand = String(values.brand || "").trim();
+  if (!brand) {
+    errors.brand = "Equipment brand is required.";
+  } else if (brand.length > EQUIPMENT_FORM_LIMITS.brandMax) {
+    errors.brand = `Brand cannot exceed ${EQUIPMENT_FORM_LIMITS.brandMax} characters.`;
+  }
+
+  const model = String(values.model || "").trim();
+  if (!model) {
+    errors.model = "Equipment model is required.";
+  } else if (model.length > EQUIPMENT_FORM_LIMITS.modelMax) {
+    errors.model = `Model cannot exceed ${EQUIPMENT_FORM_LIMITS.modelMax} characters.`;
+  }
+
+  const image = String(values.image || "").trim();
+  if (!image) {
+    errors.image = "Please upload an equipment image before submitting.";
+  } else {
+    const imageUrlErr = validateImageUrl(image);
+    if (imageUrlErr) {
+      errors.image = "Hosted equipment image URL is invalid. Please re-upload the image.";
+    }
+  }
+
+  const rentalTerms = String(values.rentalTerms || "").trim();
+  if (!rentalTerms) {
+    errors.rentalTerms = "Rental terms and conditions are required.";
+  } else if (rentalTerms.length < EQUIPMENT_FORM_LIMITS.termsMin) {
+    errors.rentalTerms = `Please enter at least ${EQUIPMENT_FORM_LIMITS.termsMin} characters for rental terms.`;
+  } else if (rentalTerms.length > EQUIPMENT_FORM_LIMITS.termsMax) {
+    errors.rentalTerms = `Rental terms cannot exceed ${EQUIPMENT_FORM_LIMITS.termsMax} characters.`;
+  }
+
+  return errors;
+}
+
+/**
+ * Construct a strict equipment creation payload omitting status or ownerId
+ * so the backend enforces Pending status and owner identity from JWT/session.
+ */
+export function buildCreateEquipmentPayload(values = {}) {
+  return {
+    name: String(values.name || "").trim(),
+    description: String(values.description || "").trim(),
+    category: String(values.category || "").trim(),
+    location: String(values.location || "").trim(),
+    rentalPrice: Number(values.rentalPrice),
+    rentalType: String(values.rentalType || "").trim(),
+    availableQuantity: Math.floor(Number(values.availableQuantity)),
+    condition: String(values.condition || "").trim(),
+    brand: String(values.brand || "").trim(),
+    model: String(values.model || "").trim(),
+    image: String(values.image || "").trim(),
+    rentalTerms: String(values.rentalTerms || "").trim(),
+  };
+}
 
 export const OWNER_PERIOD_OPTIONS = [
   { label: "Last 3 Months", value: "3m" },

@@ -1,3 +1,6 @@
+import { ApiError, apiRequest } from "@/lib/apiClient";
+import { buildCreateEquipmentPayload } from "@/lib/ownerUtils";
+import { getAccessToken } from "@/lib/token-provider";
 import {
   DEMO_CATALOG_EQUIPMENT,
   DEMO_FEATURED_EQUIPMENT,
@@ -402,4 +405,42 @@ export async function getRecentlyAddedEquipment({ limit = 4 } = {}) {
     DEMO_RECENTLY_ADDED_EQUIPMENT,
     safeLimit
   );
+}
+
+/**
+ * Submit a new equipment listing as an authenticated Owner:
+ * POST {NEXT_PUBLIC_API_BASE_URL}/api/equipment
+ * Server automatically assigns Pending status and associates verified Owner from JWT.
+ */
+export async function createEquipmentListing(
+  formValues,
+  { token = null } = {}
+) {
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw new ApiError("Authentication required to submit an equipment listing.", {
+      status: 401,
+      code: "UNAUTHORIZED",
+      requiresAuth: true,
+    });
+  }
+
+  if (!API_BASE_URL) {
+    throw new ApiError(
+      "Equipment creation endpoint (POST /api/equipment) is unavailable because NEXT_PUBLIC_API_BASE_URL is not configured yet.",
+      {
+        status: 503,
+        code: "SERVICE_UNAVAILABLE",
+      }
+    );
+  }
+
+  const sanitizedBody = buildCreateEquipmentPayload(formValues);
+
+  return apiRequest("/api/equipment", {
+    method: "POST",
+    body: sanitizedBody,
+    token: activeToken,
+    authRequired: true,
+  });
 }

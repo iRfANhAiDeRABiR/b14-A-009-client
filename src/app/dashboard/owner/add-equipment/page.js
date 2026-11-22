@@ -1,17 +1,11 @@
-import { DashboardPlaceholderView } from "@/components/dashboard/DashboardPlaceholderView";
-import { USER_ROLES } from "@/lib/roleNavigation";
+import { AddEquipmentForm } from "@/components/owner/AddEquipmentForm";
 
 export const metadata = {
-  title: "Add Equipment",
+  title: "List Your Equipment",
+  description:
+    "Add your equipment to GearNest and connect with customers looking for reliable rental solutions.",
 };
 
 export default function OwnerAddEquipmentPage() {
-  return (
-    <DashboardPlaceholderView
-      portalRole={USER_ROLES.OWNER}
-      title="Add Equipment"
-      description="Submit new rental machinery, technical specifications, gallery photos, daily or weekly pricing, and available stock units."
-      milestoneNote="The multi-field owner equipment submission form and ImgBB gallery uploader will be built in the owner dashboard milestone."
-    />
-  );
+  return <AddEquipmentForm />;
 }
