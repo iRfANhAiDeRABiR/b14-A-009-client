@@ -241,22 +241,33 @@ export function EquipmentDetails({ equipmentId }) {
             </div>
           ) : null}
 
-          {/* Top 2-Column Product Overview */}
+          {/* Unified 2-Column Product Layout */}
           <motion.div
             {...entranceProps}
             className="grid items-start gap-8 lg:grid-cols-12 lg:gap-10"
           >
-            {/* Left Column: Image Gallery */}
-            <div className="lg:col-span-7">
+            {/* Left Column: Image Gallery, Description & Technical Specifications */}
+            <div className="min-w-0 space-y-6 lg:col-span-7">
               <EquipmentGallery
                 images={item.images}
                 name={item.name}
                 alt={item.imageAlt}
               />
+
+              <Card className="rounded-2xl">
+                <h2 className="type-card-title text-foreground">
+                  Equipment Description
+                </h2>
+                <p className="type-body mt-3 text-text-secondary">
+                  {item.description}
+                </p>
+              </Card>
+
+              <EquipmentSpecifications equipment={item} />
             </div>
 
-            {/* Right Column: Pricing, Availability, Owner Summary & Primary Actions */}
-            <div className="space-y-5 lg:col-span-5">
+            {/* Right Column: Pricing, Actions, Owner Summary & Rental Terms */}
+            <div className="min-w-0 space-y-6 lg:col-span-5">
               <Card className="rounded-2xl">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Badge variant="primary" size="md">
@@ -339,28 +350,7 @@ export function EquipmentDetails({ equipmentId }) {
                 location={item.location}
                 isAuthenticated={auth.isAuthenticated}
               />
-            </div>
-          </motion.div>
 
-          {/* Lower Details Sections */}
-          <motion.div
-            {...entranceProps}
-            className="mt-10 grid gap-6 lg:grid-cols-12"
-          >
-            <div className="space-y-6 lg:col-span-7">
-              <Card className="rounded-2xl">
-                <h2 className="type-card-title text-foreground">
-                  Equipment Description
-                </h2>
-                <p className="type-body mt-3 text-text-secondary">
-                  {item.description}
-                </p>
-              </Card>
-
-              <EquipmentSpecifications equipment={item} />
-            </div>
-
-            <div className="space-y-6 lg:col-span-5">
               <RentalTerms
                 rentalTerms={item.rentalTerms}
                 rentalType={item.rentalType}

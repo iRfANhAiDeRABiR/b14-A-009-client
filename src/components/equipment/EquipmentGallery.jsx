@@ -13,10 +13,24 @@ export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
       : ["/images/hero-equipment.jpg"];
 
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [failedSrcs, setFailedSrcs] = React.useState(() => new Set());
   const prefersReducedMotion = useReducedMotion();
 
   const activeIndex = selectedIndex < safeImages.length ? selectedIndex : 0;
-  const activeSrc = safeImages[activeIndex];
+  const rawActiveSrc = safeImages[activeIndex];
+  const activeSrc = failedSrcs.has(rawActiveSrc)
+    ? "/images/hero-equipment.jpg"
+    : rawActiveSrc;
+
+  const markImageFailed = React.useCallback((src) => {
+    if (!src || src === "/images/hero-equipment.jpg") return;
+    setFailedSrcs((prev) => {
+      if (prev.has(src)) return prev;
+      const next = new Set(prev);
+      next.add(src);
+      return next;
+    });
+  }, []);
 
   return (
     <Card padding="sm" className="rounded-2xl">
@@ -37,6 +51,7 @@ export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
               priority
               sizes="(max-width: 1023px) 100vw, 55vw"
               className="object-cover"
+              onError={() => markImageFailed(rawActiveSrc)}
             />
           </motion.div>
         </AnimatePresence>
@@ -50,6 +65,9 @@ export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
         >
           {safeImages.map((src, index) => {
             const isActive = index === activeIndex;
+            const thumbSrc = failedSrcs.has(src)
+              ? "/images/hero-equipment.jpg"
+              : src;
             return (
               <button
                 key={`${src}-${index}`}
@@ -65,11 +83,12 @@ export function EquipmentGallery({ images = [], name = "Equipment", alt }) {
                 )}
               >
                 <Image
-                  src={src}
+                  src={thumbSrc}
                   alt={`${name} thumbnail ${index + 1}`}
                   fill
                   sizes="(max-width: 640px) 33vw, 15vw"
                   className="object-cover"
+                  onError={() => markImageFailed(src)}
                 />
               </button>
             );
