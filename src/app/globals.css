@@ -250,8 +250,39 @@
   line-height: 1.25;
 }
 
+@keyframes marquee-vertical-up {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes marquee-vertical-down {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-review-up {
+  animation: marquee-vertical-up var(--marquee-duration, 26s) linear infinite;
+}
+
+.animate-review-down {
+  animation: marquee-vertical-down var(--marquee-duration, 28s) linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .animate-review-up,
+  .animate-review-down {
+    animation: none;
   }
 }
