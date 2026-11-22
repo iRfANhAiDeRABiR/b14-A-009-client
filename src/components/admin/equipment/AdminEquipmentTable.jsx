@@ -206,7 +206,7 @@ export function AdminEquipmentTable() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="type-page-title text-foreground">
@@ -321,29 +321,29 @@ export function AdminEquipmentTable() {
             padding="none"
             className="hidden overflow-hidden rounded-2xl md:block"
           >
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[1060px] border-collapse text-left text-sm">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[820px] border-collapse text-left text-sm">
                 <thead>
                   <tr className="border-b border-border bg-background text-xs font-semibold uppercase tracking-wide text-text-secondary">
-                    <th scope="col" className="px-5 py-3.5">
+                    <th scope="col" className="pl-4 pr-3 py-3.5">
                       Equipment
                     </th>
-                    <th scope="col" className="px-4 py-3.5">
+                    <th scope="col" className="px-3 py-3.5">
                       Owner Information
                     </th>
-                    <th scope="col" className="px-4 py-3.5">
+                    <th scope="col" className="px-3 py-3.5">
                       Rental Rate
                     </th>
-                    <th scope="col" className="px-4 py-3.5">
+                    <th scope="col" className="px-3 py-3.5">
                       Qty &amp; Location
                     </th>
-                    <th scope="col" className="px-4 py-3.5">
+                    <th scope="col" className="px-3 py-3.5">
                       Submitted
                     </th>
-                    <th scope="col" className="px-4 py-3.5">
+                    <th scope="col" className="px-3 py-3.5">
                       Status
                     </th>
-                    <th scope="col" className="px-5 py-3.5 text-right">
+                    <th scope="col" className="pl-3 pr-4 py-3.5 text-right">
                       Actions
                     </th>
                   </tr>
@@ -359,16 +359,16 @@ export function AdminEquipmentTable() {
                         key={item._id}
                         className="transition-colors hover:bg-surface-subtle/70"
                       >
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
+                        <td className="pl-4 pr-3 py-3.5">
+                          <div className="flex items-center gap-2.5">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={item.image || "/images/hero-equipment.jpg"}
                               alt={item.name}
-                              className="size-12 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
+                              className="size-11 shrink-0 rounded-lg border border-border bg-surface-subtle object-cover"
                             />
                             <div className="min-w-0">
-                              <p className="max-w-48 truncate font-heading font-semibold text-foreground">
+                              <p className="max-w-40 truncate font-heading font-semibold text-foreground">
                                 {item.name}
                               </p>
                               <p className="truncate text-xs text-text-secondary">
@@ -378,18 +378,18 @@ export function AdminEquipmentTable() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-4">
-                          <p className="font-medium text-foreground">
+                        <td className="px-3 py-3.5">
+                          <p className="max-w-36 truncate font-medium text-foreground">
                             {item.owner?.name || "Verified Owner"}
                           </p>
                           {item.owner?.email ? (
-                            <p className="max-w-44 truncate text-xs text-text-secondary">
+                            <p className="max-w-36 truncate text-xs text-text-secondary">
                               {item.owner.email}
                             </p>
                           ) : null}
                         </td>
 
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-3 py-3.5 whitespace-nowrap">
                           <p className="font-heading font-semibold text-primary tabular-nums">
                             {item.rentalPrice !== null
                               ? formatCurrencyBDT(item.rentalPrice)
@@ -400,12 +400,12 @@ export function AdminEquipmentTable() {
                           </p>
                         </td>
 
-                        <td className="px-4 py-4">
+                        <td className="px-3 py-3.5">
                           <p className="font-medium text-foreground tabular-nums">
                             {item.availableQuantity}{" "}
                             {item.availableQuantity === 1 ? "unit" : "units"}
                           </p>
-                          <p className="inline-flex max-w-40 items-center gap-1 truncate text-xs text-text-secondary">
+                          <p className="inline-flex max-w-32 items-center gap-1 truncate text-xs text-text-secondary">
                             <MapPin
                               aria-hidden="true"
                               className="size-3 shrink-0 text-primary"
@@ -416,21 +416,22 @@ export function AdminEquipmentTable() {
                           </p>
                         </td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-xs text-text-secondary">
+                        <td className="px-3 py-3.5 whitespace-nowrap text-xs text-text-secondary">
                           {formatDisplayDate(item.createdAt)}
                         </td>
 
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-3 py-3.5 whitespace-nowrap">
                           <EquipmentStatusBadge status={item.status} size="sm" />
                         </td>
 
-                        <td className="px-5 py-4 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center justify-end gap-1.5">
+                        <td className="pl-3 pr-4 py-3.5 text-right">
+                          <div className="flex flex-wrap items-center justify-end gap-1.5">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setDetailsTarget(item)}
                               aria-label={`Inspect ${item.name}`}
+                              className="px-2.5"
                             >
                               <Eye aria-hidden="true" className="size-3.5" />
                               <span>View</span>
@@ -443,6 +444,7 @@ export function AdminEquipmentTable() {
                                 disabled={Boolean(actionBusyId)}
                                 onClick={() => setApproveTarget(item)}
                                 aria-label={`Approve ${item.name}`}
+                                className="px-2.5"
                               >
                                 <CheckCircle2
                                   aria-hidden="true"
@@ -459,7 +461,7 @@ export function AdminEquipmentTable() {
                                 disabled={Boolean(actionBusyId)}
                                 onClick={() => setRejectTarget(item)}
                                 aria-label={`Reject ${item.name}`}
-                                className="border-warning-border text-warning hover:bg-warning-bg"
+                                className="border-warning-border px-2.5 text-warning hover:bg-warning-bg"
                               >
                                 <XCircle aria-hidden="true" className="size-3.5" />
                                 <span>Reject</span>
@@ -472,9 +474,10 @@ export function AdminEquipmentTable() {
                               disabled={Boolean(actionBusyId)}
                               onClick={() => setEditTarget(item)}
                               aria-label={`Update ${item.name}`}
+                              className="px-2.5"
                             >
                               <Pencil aria-hidden="true" className="size-3.5" />
-                              <span>Update</span>
+                              <span>Edit</span>
                             </Button>
 
                             <Button
@@ -484,7 +487,7 @@ export function AdminEquipmentTable() {
                               loading={isBusyRow && Boolean(deleteTarget)}
                               onClick={() => setDeleteTarget(item)}
                               aria-label={`Delete ${item.name}`}
-                              className="border-danger-border text-danger hover:border-danger hover:bg-danger-bg"
+                              className="border-danger-border px-2.5 text-danger hover:border-danger hover:bg-danger-bg"
                             >
                               <Trash2 aria-hidden="true" className="size-3.5" />
                             </Button>

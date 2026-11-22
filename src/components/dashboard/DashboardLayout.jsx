@@ -10,7 +10,7 @@ export function DashboardLayout({ portalRole = null, children }) {
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   return (
-    <div className="flex min-h-dvh w-full bg-background text-foreground">
+    <div className="flex min-h-dvh w-full overflow-x-clip bg-background text-foreground">
       <DashboardSidebar portalRole={portalRole} />
 
       <DashboardMobileNav
@@ -28,9 +28,9 @@ export function DashboardLayout({ portalRole = null, children }) {
 
         <main
           id="dashboard-main-content"
-          className="flex-1 p-4 sm:p-6 lg:p-8"
+          className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8"
         >
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
+          <div className="mx-auto w-full min-w-0 max-w-7xl">{children}</div>
         </main>
       </div>
     </div>
