@@ -4,7 +4,6 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Container } from "@/components/ui/Container";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +35,7 @@ export function AuthLayout({
   return (
     <section className={cn("py-8 sm:py-12 lg:py-16", className)}>
       <Container>
-        <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="mb-6 flex items-center">
           <Link
             href="/"
             className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-sm font-medium text-text-secondary transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -44,7 +43,6 @@ export function AuthLayout({
             <ArrowLeft aria-hidden="true" className="size-4" />
             <span>Back to marketplace</span>
           </Link>
-          <ThemeToggle />
         </div>
 
         <motion.div
