@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, ShieldCheck, X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 
@@ -15,6 +15,7 @@ export function ConfirmDialog({
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
   confirmVariant = "primary",
+  confirmTone = "danger",
   isLoading = false,
 }) {
   const prefersReducedMotion = useReducedMotion();
@@ -94,9 +95,17 @@ export function ConfirmDialog({
               <div className="flex items-start gap-3">
                 <span
                   aria-hidden="true"
-                  className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-warning-border bg-warning-bg text-warning"
+                  className={
+                    confirmTone === "primary"
+                      ? "flex size-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-secondary text-primary"
+                      : "flex size-10 shrink-0 items-center justify-center rounded-xl border border-warning-border bg-warning-bg text-warning"
+                  }
                 >
-                  <AlertTriangle className="size-5" />
+                  {confirmTone === "primary" ? (
+                    <ShieldCheck className="size-5" />
+                  ) : (
+                    <AlertTriangle className="size-5" />
+                  )}
                 </span>
                 <div>
                   <h2
@@ -140,7 +149,11 @@ export function ConfirmDialog({
                 size="md"
                 loading={isLoading}
                 onClick={onConfirm}
-                className="bg-danger text-white hover:bg-[#961D13] focus-visible:ring-danger"
+                className={
+                  confirmTone === "primary"
+                    ? ""
+                    : "bg-danger text-white hover:bg-[#961D13] focus-visible:ring-danger"
+                }
               >
                 {confirmLabel}
               </Button>

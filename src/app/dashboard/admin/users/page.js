@@ -1,17 +1,37 @@
-import { DashboardPlaceholderView } from "@/components/dashboard/DashboardPlaceholderView";
-import { USER_ROLES } from "@/lib/roleNavigation";
+import { Suspense } from "react";
+import { AdminUsersTable } from "@/components/admin/users/AdminUsersTable";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export const metadata = {
-  title: "All Users",
+  title: "User Management",
+  description:
+    "Manage registered users, monitor account information and control platform access.",
 };
+
+function AdminUsersPageFallback() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-9 w-56" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+      </div>
+      <Card padding="md" className="space-y-4 rounded-2xl">
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+      </Card>
+      <Card padding="lg" className="space-y-3 rounded-2xl">
+        <Skeleton className="h-14 w-full rounded-lg" />
+        <Skeleton className="h-14 w-full rounded-lg" />
+      </Card>
+    </div>
+  );
+}
 
 export default function AdminUsersPage() {
   return (
-    <DashboardPlaceholderView
-      portalRole={USER_ROLES.ADMIN}
-      title="All Users & Role Governance"
-      description="Inspect registered GearNest users, account providers, and administer role assignments across Customer, Owner, and Admin accounts."
-      milestoneNote="User directory tables and role promotion workflows will be added in the admin dashboard milestone and backed by server-side Admin checks."
-    />
+    <Suspense fallback={<AdminUsersPageFallback />}>
+      <AdminUsersTable />
+    </Suspense>
   );
 }

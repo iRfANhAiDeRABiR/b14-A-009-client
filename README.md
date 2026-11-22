@@ -33,7 +33,7 @@ src/
     auth/            # AuthLayout, LoginForm, RegisterForm, GoogleLoginButton, PasswordInput, ProtectedRoute, 403/Session states
     customer/        # CustomerOverview, CustomerStats, MonthlyRentalChart, RecentRentals, FavoritePreview, MyRentalsTable, BookingDetailsModal, BookingHistoryFilters, BookingPaymentSummary, FavoritesTable, FavoriteFilters, FavoriteEquipmentCard, RemoveFavoriteDialog, FavoriteEmptyState, ProfileForm
     owner/           # OwnerAnalyticsOverview, OwnerDashboardHeader, OwnerStatsCards, OwnerEarningsChart, OwnerRentalChart, OwnerEquipmentPerformance, OwnerRecentRentals, OwnerQuickActions, AddEquipmentForm, EditEquipmentForm, MyEquipmentTable, EquipmentManagementFilters, EquipmentDetailsModal, DeleteEquipmentDialog, EquipmentStatusBadge, OwnerEquipmentStats, OwnerRentalOverview, OwnerRentalTable, OwnerRentalDetailsModal, OwnerRentalFilters, OwnerRentalSearch, OwnerRentalStatusBadge, OwnerRentalPagination, EquipmentBasicInfo, EquipmentRentalInfo, EquipmentSpecifications, EquipmentImageUpload, EquipmentLivePreview, OwnerInformationCard, RentalTermsForm
-    admin/           # AdminAnalyticsOverview, AdminDashboardHeader, AdminStatsCards, AdminBookingChart, AdminRevenueChart, EquipmentApprovalOverview, RecentPlatformActivity, AdminQuickActions
+    admin/           # AdminAnalyticsOverview, AdminDashboardHeader, AdminStatsCards, AdminBookingChart, AdminRevenueChart, EquipmentApprovalOverview, RecentPlatformActivity, AdminQuickActions, users/{AdminUsersTable,UserRoleDialog,UserDetailsModal,UserFilters}, equipment/{AdminEquipmentTable,EquipmentApprovalDialog,EquipmentRejectionDialog,AdminEquipmentEditForm,EquipmentDetailsModal,AdminEquipmentFilters}, rentals/{AdminRentalsTable,AdminRentalDetailsModal,RentalFilters}
     dashboard/       # DashboardLayout, DashboardSidebar, DashboardHeader, DashboardMobileNav, DashboardBreadcrumbs, DashboardUserMenu, Skeletons
     equipment/       # Catalog, EquipmentDetails, Gallery, Specifications, OwnerCard, FavoriteButton, BookingModal, Summary & Calculator
     home/            # Homepage sections (Hero, Featured, Categories, WhyChooseUs, HowItWorks, Reviews, RecentlyAdded, OwnerCTA)
@@ -43,8 +43,8 @@ src/
   context/           # React context providers (AuthProvider, FavoriteProvider, ToastContext)
   data/              # Demo fallback equipment, categories, and sample reviews
   lib/               # Utilities, site config, Better Auth client, JWT token-provider, apiClient, validation, customerUtils, ownerUtils, adminUtils, roleNavigation & pricing
-  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings, useOwnerAnalytics, useEquipmentForm, useOwnerEquipment, useOwnerRentals, useAdminAnalytics)
-  services/          # API client services (authService, customerService, ownerAnalyticsService, adminAnalyticsService, equipmentService, imageUploadService, favoriteService, bookingService, profileService)
+  hooks/             # Custom React hooks (useAuth, useEquipment, useEquipmentDetails, useFavorites, useMyBookings, useOwnerAnalytics, useEquipmentForm, useOwnerEquipment, useOwnerRentals, useAdminAnalytics, useAdminUsers, useAdminEquipment, useAdminRentals)
+  services/          # API client services (authService, customerService, ownerAnalyticsService, adminAnalyticsService, adminUserService, adminEquipmentService, adminRentalService, equipmentService, imageUploadService, favoriteService, bookingService, profileService)
 public/
   images/            # Curated local imagery
   icons/             # Brand mark and vector assets

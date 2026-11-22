@@ -20,6 +20,9 @@ export function useEquipmentForm({
   mode = "create",
   equipmentId = "",
   initialValues = null,
+  onSubmitUpdate = null,
+  onSuccess = null,
+  redirectHref = "/dashboard/owner/my-equipment",
 } = {}) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -253,7 +256,11 @@ export function useEquipmentForm({
           token || (typeof getToken === "function" ? await getToken() : null);
 
         if (mode === "edit") {
-          const result = await updateOwnerEquipment(equipmentId, values, {
+          const updateFn =
+            typeof onSubmitUpdate === "function"
+              ? onSubmitUpdate
+              : updateOwnerEquipment;
+          const result = await updateFn(equipmentId, values, {
             token: activeToken,
           });
 
@@ -268,7 +275,11 @@ export function useEquipmentForm({
             variant: "success",
           });
 
-          router.push("/dashboard/owner/my-equipment");
+          if (typeof onSuccess === "function") {
+            onSuccess(result, values);
+          } else if (redirectHref) {
+            router.push(redirectHref);
+          }
           return { ok: true, result };
         }
 
@@ -312,6 +323,9 @@ export function useEquipmentForm({
       getToken,
       isSubmitting,
       mode,
+      onSubmitUpdate,
+      onSuccess,
+      redirectHref,
       router,
       showToast,
       token,
