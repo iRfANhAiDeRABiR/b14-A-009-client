@@ -53,6 +53,7 @@ export function useAdminUsers() {
     getAdminUsers({
       search: filters.search,
       role: filters.role,
+      status: filters.status,
       sort: filters.sort,
       page: filters.page,
       limit: filters.limit,
@@ -101,6 +102,7 @@ export function useAdminUsers() {
     filters.role,
     filters.search,
     filters.sort,
+    filters.status,
     isAuthLoading,
     isAuthenticated,
     requestKey,
@@ -156,8 +158,31 @@ export function useAdminUsers() {
     }));
   }, []);
 
+  const applyUpdatedUser = React.useCallback((updatedRecord) => {
+    if (!updatedRecord) return;
+    const cleanId = String(updatedRecord._id || updatedRecord.id || "");
+    if (!cleanId) return;
+    setState((prev) => ({
+      ...prev,
+      items: prev.items.map((item) =>
+        String(item._id) === cleanId ? { ...item, ...updatedRecord } : item
+      ),
+    }));
+  }, []);
+
+  const removeUserFromList = React.useCallback((userId) => {
+    const cleanId = String(userId || "");
+    setState((prev) => ({
+      ...prev,
+      items: prev.items.filter((item) => String(item._id) !== cleanId),
+    }));
+  }, []);
+
   const hasActiveFilters = Boolean(
-    filters.search || filters.role !== "all" || filters.sort !== "newest"
+    filters.search ||
+      filters.role !== "all" ||
+      filters.status !== "all" ||
+      filters.sort !== "newest"
   );
 
   return {
@@ -174,5 +199,7 @@ export function useAdminUsers() {
     setPage,
     retry,
     applyUpdatedUserRole,
+    applyUpdatedUser,
+    removeUserFromList,
   };
 }

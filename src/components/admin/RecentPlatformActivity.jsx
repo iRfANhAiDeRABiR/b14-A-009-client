@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import {
   Activity,
+  ArrowRight,
   Boxes,
   ClipboardList,
   CreditCard,
+  Mail,
   UserPlus,
 } from "lucide-react";
 
@@ -17,7 +20,8 @@ function getActivityIcon(category) {
   if (category === "user") return UserPlus;
   if (category === "equipment") return Boxes;
   if (category === "payment") return CreditCard;
-  if (category === "booking") return ClipboardList;
+  if (category === "booking" || category === "rental") return ClipboardList;
+  if (category === "inquiry") return Mail;
   return Activity;
 }
 
@@ -53,13 +57,22 @@ export function RecentPlatformActivity({ activities = [], loading = false }) {
   return (
     <Card padding="lg" className="flex flex-col justify-between rounded-2xl">
       <div>
-        <div>
-          <h2 className="type-card-title text-foreground">
-            Recent Platform Activity
-          </h2>
-          <p className="mt-1 text-xs text-text-secondary">
-            Latest user registrations, equipment submissions, bookings, and payment events.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="type-card-title text-foreground">
+              Recent Platform Activity
+            </h2>
+            <p className="mt-1 text-xs text-text-secondary">
+              Latest admin audit events, equipment submissions, bookings, and payments.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/admin/logs"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+          >
+            <span>Full Event Log</span>
+            <ArrowRight aria-hidden="true" className="size-3.5" />
+          </Link>
         </div>
 
         {safeActivities.length === 0 ? (

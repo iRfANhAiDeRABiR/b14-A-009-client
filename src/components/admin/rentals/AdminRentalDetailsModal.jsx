@@ -18,20 +18,29 @@ import {
   X,
 } from "lucide-react";
 
+import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
   formatBookingDuration,
   formatDisplayDate,
 } from "@/lib/adminUtils";
-import { getAdminRentalById } from "@/services/adminRentalService";
+import {
+  getAdminRentalById,
+  updateAdminRentalNote,
+} from "@/services/adminRentalService";
 import { BookingPaymentSummary } from "@/components/customer/BookingPaymentSummary";
 import { OwnerRentalStatusBadge } from "@/components/owner/OwnerRentalStatusBadge";
 import { Button } from "@/components/ui/Button";
 
-export function AdminRentalDetailsModal({ rental, onClose }) {
+export function AdminRentalDetailsModal({
+  rental,
+  onClose,
+  onUpdated = null,
+}) {
   const isOpen = Boolean(rental);
   const prefersReducedMotion = useReducedMotion();
-  const { token } = useAuth();
+  const { showToast } = useToast();
+  const { token, getToken } = useAuth();
   const closeButtonRef = React.useRef(null);
 
   const rentalId = rental?._id || "";
@@ -42,6 +51,8 @@ export function AdminRentalDetailsModal({ rental, onClose }) {
     error: null,
     errorStatus: null,
   });
+  const [noteDraft, setNoteDraft] = React.useState({ id: "", value: "" });
+  const [isSavingNote, setIsSavingNote] = React.useState(false);
 
   React.useEffect(() => {
     if (!isOpen) return undefined;
@@ -494,6 +505,85 @@ export function AdminRentalDetailsModal({ rental, onClose }) {
                   </dl>
                 </section>
               ) : null}
+
+              {/* Admin Internal Governance Note */}
+              <section className="rounded-xl border border-border bg-background p-4">
+                <h3 className="font-heading text-sm font-semibold text-foreground">
+                  Administrator Governance Note
+                </h3>
+                <p className="mt-0.5 text-xs text-text-secondary">
+                  Record verification checks or dispute notes (recorded in the platform Event Log without altering Stripe payment state).
+                </p>
+                <div className="mt-3 space-y-2.5">
+                  <textarea
+                    rows={2}
+                    maxLength={500}
+                    disabled={isSavingNote}
+                    placeholder="Add internal operational or verification note..."
+                    value={
+                      noteDraft.id === rentalId
+                        ? noteDraft.value
+                        : activeRecord.adminNote || ""
+                    }
+                    onChange={(e) =>
+                      setNoteDraft({ id: rentalId, value: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:text-sm"
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      loading={isSavingNote}
+                      onClick={async () => {
+                        if (!rentalId || isSavingNote) return;
+                        setIsSavingNote(true);
+                        try {
+                          const activeToken =
+                            token ||
+                            (typeof getToken === "function"
+                              ? await getToken()
+                              : null);
+                          const val =
+                            noteDraft.id === rentalId
+                              ? noteDraft.value
+                              : activeRecord.adminNote || "";
+                          const res = await updateAdminRentalNote(
+                            rentalId,
+                            { adminNote: val },
+                            { token: activeToken }
+                          );
+                          setDetailState((prev) => ({
+                            ...prev,
+                            loadedId: rentalId,
+                            fetched: res.record,
+                          }));
+                          onUpdated?.();
+                          showToast({
+                            title: "Governance note saved",
+                            description: res.message,
+                            variant: "success",
+                          });
+                        } catch (err) {
+                          showToast({
+                            title: "Save failed",
+                            description:
+                              err instanceof Error
+                                ? err.message
+                                : "Unable to save rental note.",
+                            variant: "error",
+                          });
+                        } finally {
+                          setIsSavingNote(false);
+                        }
+                      }}
+                    >
+                      Save Note
+                    </Button>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-border bg-background px-5 py-3.5 sm:rounded-b-2xl sm:px-6">

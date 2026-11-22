@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   AlertCircle,
   ClipboardList,
+  Download,
   Eye,
   RefreshCw,
   ShieldAlert,
@@ -16,6 +17,7 @@ import {
   formatBookingDuration,
   formatDisplayDate,
 } from "@/lib/adminUtils";
+import { downloadCsv } from "@/lib/csvExport";
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
 import { AdminRentalDetailsModal } from "@/components/admin/rentals/AdminRentalDetailsModal";
 import { RentalFilters } from "@/components/admin/rentals/RentalFilters";
@@ -64,6 +66,24 @@ export function AdminRentalsTable() {
   const [selectedRental, setSelectedRental] = React.useState(null);
   const isAuthError = errorStatus === 401 || errorStatus === 403;
 
+  const handleExportCsv = () => {
+    downloadCsv(
+      `gearnest-rentals-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: "Booking ID", key: "_id" },
+        { header: "Equipment", accessor: (r) => r.equipment?.name || "" },
+        { header: "Customer", accessor: (r) => r.customer?.name || "" },
+        { header: "Owner", accessor: (r) => r.owner?.name || "" },
+        { header: "Start Date", key: "startDate" },
+        { header: "End Date", key: "endDate" },
+        { header: "Total Amount", key: "totalAmount" },
+        { header: "Payment Status", key: "paymentStatus" },
+        { header: "Booking Status", key: "bookingStatus" },
+      ],
+      items
+    );
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -85,6 +105,16 @@ export function AdminRentalsTable() {
               {pagination.totalItems === 1 ? "rental record" : "rental records"}
             </span>
           ) : null}
+
+          <Button
+            variant="outline"
+            size="md"
+            disabled={loading || items.length === 0}
+            onClick={handleExportCsv}
+          >
+            <Download aria-hidden="true" className="size-4" />
+            <span>Export CSV</span>
+          </Button>
 
           <Button
             variant="outline"
@@ -515,6 +545,7 @@ export function AdminRentalsTable() {
 
       <AdminRentalDetailsModal
         rental={selectedRental}
+        onUpdated={retry}
         onClose={() => setSelectedRental(null)}
       />
     </div>

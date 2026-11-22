@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Boxes,
   ClipboardList,
+  Mail,
+  ScrollText,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -15,7 +17,7 @@ const ADMIN_QUICK_ACTIONS = [
   {
     title: "All Users",
     description:
-      "Review registered accounts, inspect user verification status, and manage marketplace roles.",
+      "Manage user roles, edit profile details, suspend/ban accounts, and audit statuses.",
     href: "/dashboard/admin/users",
     icon: Users,
     tone: "bg-secondary text-primary",
@@ -23,7 +25,7 @@ const ADMIN_QUICK_ACTIONS = [
   {
     title: "All Equipment",
     description:
-      "Audit submitted machinery listings, inspect details, and moderate approval statuses.",
+      "Audit submitted machinery listings, inspect approval history, and moderate statuses.",
     href: "/dashboard/admin/equipment",
     icon: Boxes,
     tone: "bg-warning-bg text-warning",
@@ -31,10 +33,26 @@ const ADMIN_QUICK_ACTIONS = [
   {
     title: "All Rentals",
     description:
-      "Monitor platform-wide customer bookings, active hires, and settlement statuses.",
+      "Monitor platform-wide customer bookings, settlements, and internal admin notes.",
     href: "/dashboard/admin/rentals",
     icon: ClipboardList,
     tone: "bg-success-bg text-success",
+  },
+  {
+    title: "Support Inquiries",
+    description:
+      "Review messages from /contact, track investigation status, and resolve tickets.",
+    href: "/dashboard/admin/inquiries",
+    icon: Mail,
+    tone: "bg-secondary text-primary",
+  },
+  {
+    title: "Event Log",
+    description:
+      "Filter persistent platform audit logs across users, equipment, rentals, and support.",
+    href: "/dashboard/admin/logs",
+    icon: ScrollText,
+    tone: "bg-warning-bg text-warning",
   },
   {
     title: "My Profile",
@@ -61,7 +79,7 @@ export function AdminQuickActions() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {ADMIN_QUICK_ACTIONS.map((action) => {
           const Icon = action.icon;
           return (

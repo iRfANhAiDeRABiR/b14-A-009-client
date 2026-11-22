@@ -3,9 +3,13 @@
 import * as React from "react";
 import {
   AlertCircle,
+  Download,
   Eye,
+  Pencil,
   RefreshCw,
   ShieldAlert,
+  ShieldCheck,
+  Trash2,
   User,
   Users,
 } from "lucide-react";
@@ -16,12 +20,22 @@ import { useAdminUsers } from "@/hooks/useAdminUsers";
 import {
   ADMIN_ASSIGNABLE_ROLES,
   formatDisplayDate,
+  getAccountStatusBadge,
   getRoleBadgeVariant,
 } from "@/lib/adminUtils";
-import { updateAdminUserRole } from "@/services/adminUserService";
+import { downloadCsv } from "@/lib/csvExport";
+import {
+  deleteAdminUser,
+  updateAdminUserDetails,
+  updateAdminUserRole,
+  updateAdminUserStatus,
+} from "@/services/adminUserService";
+import { UserDeleteDialog } from "@/components/admin/users/UserDeleteDialog";
 import { UserDetailsModal } from "@/components/admin/users/UserDetailsModal";
+import { UserEditModal } from "@/components/admin/users/UserEditModal";
 import { UserFilters } from "@/components/admin/users/UserFilters";
 import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
+import { UserStatusDialog } from "@/components/admin/users/UserStatusDialog";
 import { EquipmentPagination } from "@/components/equipment/EquipmentPagination";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -64,14 +78,44 @@ export function AdminUsersTable() {
     setPage,
     retry,
     applyUpdatedUserRole,
+    applyUpdatedUser,
+    removeUserFromList,
   } = useAdminUsers();
 
   const [detailsTarget, setDetailsTarget] = React.useState(null);
   const [pendingRoleChange, setPendingRoleChange] = React.useState(null);
+  const [statusTarget, setStatusTarget] = React.useState(null);
+  const [editTarget, setEditTarget] = React.useState(null);
+  const [deleteTarget, setDeleteTarget] = React.useState(null);
   const [isUpdatingRole, setIsUpdatingRole] = React.useState(false);
+  const [isMutatingUser, setIsMutatingUser] = React.useState(false);
 
-  const showAccountStatusColumn = items.some((u) => Boolean(u.accountStatus));
   const isAuthError = errorStatus === 401 || errorStatus === 403;
+
+  const resolveToken = async () =>
+    token || (typeof getToken === "function" ? await getToken() : null);
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      `gearnest-users-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: "User ID", key: "_id" },
+        { header: "Name", key: "name" },
+        { header: "Email", key: "email" },
+        { header: "Role", key: "role" },
+        {
+          header: "Status",
+          accessor: (row) => row.accountStatus || "Active",
+        },
+        { header: "Phone", key: "phone" },
+        {
+          header: "Registered At",
+          accessor: (row) => formatDisplayDate(row.createdAt),
+        },
+      ],
+      items
+    );
+  };
 
   const handleSelectNewRole = (targetUser, selectedRole) => {
     if (!targetUser || !selectedRole || selectedRole === targetUser.role) {
@@ -126,6 +170,106 @@ export function AdminUsersTable() {
     }
   };
 
+  const handleConfirmStatusUpdate = async ({ status, reason }) => {
+    if (!statusTarget?._id || isMutatingUser) return;
+    setIsMutatingUser(true);
+    try {
+      const activeToken = await resolveToken();
+      const response = await updateAdminUserStatus(
+        statusTarget._id,
+        { status, reason },
+        { token: activeToken }
+      );
+      if (response?.data) {
+        applyUpdatedUser({
+          ...statusTarget,
+          ...response.data,
+          _id: response.data.id || statusTarget._id,
+        });
+      } else {
+        retry();
+      }
+      setStatusTarget(null);
+      showToast({
+        title: "Account access updated",
+        description: `${statusTarget.name} is now marked as ${status}.`,
+        variant: status === "Active" ? "success" : "neutral",
+      });
+    } catch (err) {
+      showToast({
+        title: "Status update failed",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Unable to update user account status.",
+        variant: "error",
+      });
+    } finally {
+      setIsMutatingUser(false);
+    }
+  };
+
+  const handleConfirmUserEdit = async (fields) => {
+    if (!editTarget?._id || isMutatingUser) return;
+    setIsMutatingUser(true);
+    try {
+      const activeToken = await resolveToken();
+      const response = await updateAdminUserDetails(editTarget._id, fields, {
+        token: activeToken,
+      });
+      if (response?.data) {
+        applyUpdatedUser({
+          ...editTarget,
+          ...response.data,
+          _id: response.data.id || editTarget._id,
+        });
+      } else {
+        retry();
+      }
+      setEditTarget(null);
+      showToast({
+        title: "User details updated",
+        description: `Saved profile updates for ${fields.name}.`,
+        variant: "success",
+      });
+    } catch (err) {
+      showToast({
+        title: "Update failed",
+        description:
+          err instanceof Error ? err.message : "Unable to update user profile.",
+        variant: "error",
+      });
+    } finally {
+      setIsMutatingUser(false);
+    }
+  };
+
+  const handleConfirmDeleteUser = async () => {
+    if (!deleteTarget?._id || isMutatingUser) return;
+    setIsMutatingUser(true);
+    try {
+      const activeToken = await resolveToken();
+      await deleteAdminUser(deleteTarget._id, { token: activeToken });
+      removeUserFromList(deleteTarget._id);
+      setDeleteTarget(null);
+      retry();
+      showToast({
+        title: "User account removed",
+        description: `${deleteTarget.name} was archived and active sessions revoked.`,
+        variant: "success",
+      });
+    } catch (err) {
+      showToast({
+        title: "Removal failed",
+        description:
+          err instanceof Error ? err.message : "Unable to remove user account.",
+        variant: "error",
+      });
+    } finally {
+      setIsMutatingUser(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -147,6 +291,16 @@ export function AdminUsersTable() {
               {pagination.totalItems === 1 ? "user" : "users"}
             </span>
           ) : null}
+
+          <Button
+            variant="outline"
+            size="md"
+            disabled={loading || items.length === 0}
+            onClick={handleExportCsv}
+          >
+            <Download aria-hidden="true" className="size-4" />
+            <span>Export CSV</span>
+          </Button>
 
           <Button
             variant="outline"
@@ -264,13 +418,11 @@ export function AdminUsersTable() {
                     <th scope="col" className="px-4 py-3.5">
                       Role
                     </th>
-                    {showAccountStatusColumn ? (
-                      <th scope="col" className="px-4 py-3.5">
-                        Account Status
-                      </th>
-                    ) : null}
                     <th scope="col" className="px-4 py-3.5">
-                      Registration Date
+                      Status
+                    </th>
+                    <th scope="col" className="px-4 py-3.5">
+                      Registered
                     </th>
                     <th scope="col" className="px-5 py-3.5 text-right">
                       Actions
@@ -336,24 +488,29 @@ export function AdminUsersTable() {
                           </Badge>
                         </td>
 
-                        {showAccountStatusColumn ? (
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            {account.accountStatus ? (
-                              <Badge variant="neutral" size="sm">
-                                {account.accountStatus}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {(() => {
+                            const statusBadge = getAccountStatusBadge(
+                              account.accountStatus
+                            );
+                            return (
+                              <Badge
+                                variant={statusBadge.variant}
+                                dot
+                                size="sm"
+                              >
+                                {statusBadge.label}
                               </Badge>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                        ) : null}
+                            );
+                          })()}
+                        </td>
 
                         <td className="px-4 py-4 whitespace-nowrap text-text-secondary">
                           {formatDisplayDate(account.createdAt)}
                         </td>
 
                         <td className="px-5 py-4 text-right whitespace-nowrap">
-                          <div className="inline-flex items-center justify-end gap-2">
+                          <div className="inline-flex items-center justify-end gap-1.5">
                             <label
                               htmlFor={`role-select-${account._id}`}
                               className="sr-only"
@@ -363,7 +520,7 @@ export function AdminUsersTable() {
                             <select
                               id={`role-select-${account._id}`}
                               value={account.role}
-                              disabled={isUpdatingRole}
+                              disabled={isUpdatingRole || isCurrentSessionUser}
                               onChange={(e) =>
                                 handleSelectNewRole(account, e.target.value)
                               }
@@ -383,7 +540,61 @@ export function AdminUsersTable() {
                               aria-label={`View details for ${account.name}`}
                             >
                               <Eye aria-hidden="true" className="size-3.5" />
-                              <span>Manage</span>
+                              <span>View</span>
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditTarget(account)}
+                              aria-label={`Edit details for ${account.name}`}
+                            >
+                              <Pencil aria-hidden="true" className="size-3.5" />
+                              <span>Edit</span>
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isCurrentSessionUser || isMutatingUser}
+                              onClick={() => setStatusTarget(account)}
+                              aria-label={`Manage access status for ${account.name}`}
+                              className={
+                                String(account.accountStatus || "Active") !==
+                                "Active"
+                                  ? "border-primary/40 text-primary hover:bg-secondary"
+                                  : "border-warning-border text-warning hover:bg-warning-bg"
+                              }
+                            >
+                              {String(account.accountStatus || "Active") !==
+                              "Active" ? (
+                                <ShieldCheck
+                                  aria-hidden="true"
+                                  className="size-3.5"
+                                />
+                              ) : (
+                                <ShieldAlert
+                                  aria-hidden="true"
+                                  className="size-3.5"
+                                />
+                              )}
+                              <span>
+                                {String(account.accountStatus || "Active") !==
+                                "Active"
+                                  ? "Activate"
+                                  : "Suspend"}
+                              </span>
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isCurrentSessionUser || isMutatingUser}
+                              onClick={() => setDeleteTarget(account)}
+                              aria-label={`Remove ${account.name}`}
+                              className="border-danger-border text-danger hover:border-danger hover:bg-danger-bg"
+                            >
+                              <Trash2 aria-hidden="true" className="size-3.5" />
                             </Button>
                           </div>
                         </td>
@@ -405,85 +616,133 @@ export function AdminUsersTable() {
 
           {/* Mobile Cards */}
           <div className="space-y-3 md:hidden">
-            {items.map((account) => (
-              <Card
-                key={account._id || `${account.email}-mobile`}
-                padding="md"
-                className="space-y-3 rounded-2xl"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    {account.photoURL ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={account.photoURL}
-                        alt={`${account.name} avatar`}
-                        className="size-11 shrink-0 rounded-full border border-border bg-surface-subtle object-cover"
-                      />
-                    ) : (
-                      <span
-                        aria-hidden="true"
-                        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"
+            {items.map((account) => {
+              const isCurrentSessionUser = Boolean(
+                currentAdmin?.email &&
+                  account.email &&
+                  currentAdmin.email.toLowerCase() ===
+                    account.email.toLowerCase()
+              );
+              const statusBadge = getAccountStatusBadge(account.accountStatus);
+              return (
+                <Card
+                  key={account._id || `${account.email}-mobile`}
+                  padding="md"
+                  className="space-y-3 rounded-2xl"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      {account.photoURL ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={account.photoURL}
+                          alt={`${account.name} avatar`}
+                          className="size-11 shrink-0 rounded-full border border-border bg-surface-subtle object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary"
+                        >
+                          <User className="size-5" />
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate font-heading text-sm font-bold text-foreground">
+                          {account.name}
+                        </p>
+                        <p className="truncate text-xs text-text-secondary">
+                          {account.email || "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge
+                        variant={getRoleBadgeVariant(account.role)}
+                        dot
+                        size="sm"
                       >
-                        <User className="size-5" />
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="truncate font-heading text-sm font-bold text-foreground">
-                        {account.name}
-                      </p>
-                      <p className="truncate text-xs text-text-secondary">
-                        {account.email || "—"}
-                      </p>
+                        {account.role}
+                      </Badge>
+                      <Badge variant={statusBadge.variant} size="sm">
+                        {statusBadge.label}
+                      </Badge>
                     </div>
                   </div>
 
-                  <Badge
-                    variant={getRoleBadgeVariant(account.role)}
-                    dot
-                    size="sm"
-                  >
-                    {account.role}
-                  </Badge>
-                </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs text-text-secondary">
+                    <span>Registered: {formatDisplayDate(account.createdAt)}</span>
+                    {isCurrentSessionUser ? (
+                      <span className="font-semibold text-primary">
+                        Current session
+                      </span>
+                    ) : null}
+                  </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs text-text-secondary">
-                  <span>Registered: {formatDisplayDate(account.createdAt)}</span>
-                  {account.accountStatus ? (
-                    <Badge variant="neutral" size="sm">
-                      {account.accountStatus}
-                    </Badge>
-                  ) : null}
-                </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                    <select
+                      aria-label={`Change role for ${account.name}`}
+                      value={account.role}
+                      disabled={isUpdatingRole || isCurrentSessionUser}
+                      onChange={(e) =>
+                        handleSelectNewRole(account, e.target.value)
+                      }
+                      className="min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    >
+                      {ADMIN_ASSIGNABLE_ROLES.map((roleOption) => (
+                        <option key={roleOption} value={roleOption}>
+                          {roleOption}
+                        </option>
+                      ))}
+                    </select>
 
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-                  <select
-                    aria-label={`Change role for ${account.name}`}
-                    value={account.role}
-                    disabled={isUpdatingRole}
-                    onChange={(e) =>
-                      handleSelectNewRole(account, e.target.value)
-                    }
-                    className="min-h-9 cursor-pointer rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    {ADMIN_ASSIGNABLE_ROLES.map((roleOption) => (
-                      <option key={roleOption} value={roleOption}>
-                        {roleOption}
-                      </option>
-                    ))}
-                  </select>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDetailsTarget(account)}
-                  >
-                    <Eye aria-hidden="true" className="size-3.5" />
-                    <span>View Details</span>
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDetailsTarget(account)}
+                      >
+                        <Eye aria-hidden="true" className="size-3.5" />
+                        <span>View</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditTarget(account)}
+                      >
+                        <Pencil aria-hidden="true" className="size-3.5" />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isCurrentSessionUser || isMutatingUser}
+                        onClick={() => setStatusTarget(account)}
+                      >
+                        <ShieldAlert aria-hidden="true" className="size-3.5" />
+                        <span>
+                          {String(account.accountStatus || "Active") !==
+                          "Active"
+                            ? "Activate"
+                            : "Suspend"}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={isCurrentSessionUser || isMutatingUser}
+                        onClick={() => setDeleteTarget(account)}
+                        aria-label={`Remove ${account.name}`}
+                        className="border-danger-border text-danger hover:bg-danger-bg"
+                      >
+                        <Trash2 aria-hidden="true" className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
 
             {pagination.totalPages > 1 ? (
               <Card padding="none" className="overflow-hidden rounded-2xl">
@@ -511,7 +770,36 @@ export function AdminUsersTable() {
 
       <UserDetailsModal
         userRecord={detailsTarget}
+        isSelf={Boolean(
+          detailsTarget?.email &&
+            currentAdmin?.email &&
+            detailsTarget.email.toLowerCase() === currentAdmin.email.toLowerCase()
+        )}
+        onEdit={(u) => setEditTarget(u)}
+        onStatusAction={(u) => setStatusTarget(u)}
+        onDelete={(u) => setDeleteTarget(u)}
         onClose={() => setDetailsTarget(null)}
+      />
+
+      <UserStatusDialog
+        targetUser={statusTarget}
+        isUpdating={isMutatingUser}
+        onClose={() => !isMutatingUser && setStatusTarget(null)}
+        onConfirm={handleConfirmStatusUpdate}
+      />
+
+      <UserEditModal
+        targetUser={editTarget}
+        isSaving={isMutatingUser}
+        onClose={() => !isMutatingUser && setEditTarget(null)}
+        onConfirm={handleConfirmUserEdit}
+      />
+
+      <UserDeleteDialog
+        targetUser={deleteTarget}
+        isDeleting={isMutatingUser}
+        onClose={() => !isMutatingUser && setDeleteTarget(null)}
+        onConfirm={handleConfirmDeleteUser}
       />
     </div>
   );

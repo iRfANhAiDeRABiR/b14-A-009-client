@@ -315,6 +315,46 @@ export const ADMIN_USER_ROLE_OPTIONS = [
   { label: "Admin", value: "Admin" },
 ];
 
+export const ADMIN_USER_STATUS_OPTIONS = [
+  { label: "All Statuses", value: "all" },
+  { label: "Active", value: "Active" },
+  { label: "Suspended", value: "Suspended" },
+  { label: "Banned", value: "Banned" },
+];
+
+export const ADMIN_ASSIGNABLE_ACCOUNT_STATUSES = [
+  { label: "Active", value: "Active" },
+  { label: "Suspended", value: "Suspended" },
+  { label: "Banned", value: "Banned" },
+];
+
+export function getAccountStatusBadge(rawStatus) {
+  const clean = String(rawStatus || "Active").trim();
+  const lower = clean.toLowerCase();
+  if (lower === "banned" || lower === "deleted") {
+    return { label: clean, variant: "danger" };
+  }
+  if (lower === "suspended" || lower === "disabled" || lower === "inactive") {
+    return { label: clean, variant: "warning" };
+  }
+  return { label: "Active", variant: "success" };
+}
+
+export function getLogSeverityBadge(rawSeverity) {
+  const lower = String(rawSeverity || "info").trim().toLowerCase();
+  if (lower === "danger") return { label: "Critical", variant: "danger" };
+  if (lower === "warning") return { label: "Warning", variant: "warning" };
+  return { label: "Info", variant: "neutral" };
+}
+
+export function getInquiryStatusBadge(rawStatus) {
+  const clean = String(rawStatus || "New").trim();
+  const lower = clean.toLowerCase();
+  if (lower === "resolved") return { label: "Resolved", variant: "success" };
+  if (lower === "in progress") return { label: "In Progress", variant: "warning" };
+  return { label: "New", variant: "primary" };
+}
+
 export const ADMIN_USER_SORT_OPTIONS = [
   { label: "Recently Registered", value: "newest" },
   { label: "Oldest Registered", value: "oldest" },
@@ -375,6 +415,11 @@ export function parseAdminUsersFiltersFromParams(searchParams) {
   return {
     search: String(getParam("search") || "").trim(),
     role: normalizeOptionValue(getParam("role"), ADMIN_USER_ROLE_OPTIONS, "all"),
+    status: normalizeOptionValue(
+      getParam("status"),
+      ADMIN_USER_STATUS_OPTIONS,
+      "all"
+    ),
     sort: normalizeSortValue(getParam("sort"), ADMIN_USER_SORT_OPTIONS, "newest"),
     page: Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1,
     limit: DEFAULT_ADMIN_PAGE_LIMIT,
@@ -388,6 +433,13 @@ export function buildAdminUsersQueryString(filters = {}) {
 
   const role = normalizeOptionValue(filters.role, ADMIN_USER_ROLE_OPTIONS, "all");
   if (role !== "all") params.set("role", role);
+
+  const status = normalizeOptionValue(
+    filters.status,
+    ADMIN_USER_STATUS_OPTIONS,
+    "all"
+  );
+  if (status !== "all") params.set("status", status);
 
   const sort = normalizeSortValue(filters.sort, ADMIN_USER_SORT_OPTIONS, "newest");
   if (sort !== "newest") params.set("sort", sort);
@@ -407,11 +459,13 @@ export function normalizeAdminUser(raw) {
   const accountStatusRaw = String(
     raw.accountStatus ||
       raw.status ||
-      (raw.isSuspended === true
-        ? "Suspended"
-        : raw.isActive === false
-          ? "Inactive"
-          : "")
+      (raw.banned === true
+        ? "Banned"
+        : raw.suspended === true || raw.isSuspended === true
+          ? "Suspended"
+          : raw.isActive === false || raw.disabled === true
+            ? "Inactive"
+            : "Active")
   ).trim();
 
   return {
@@ -421,6 +475,8 @@ export function normalizeAdminUser(raw) {
     photoURL: String(raw.image || raw.photoURL || raw.avatar || "").trim(),
     role: normalizeDisplayRole(raw.role),
     accountStatus: accountStatusRaw,
+    suspensionReason: String(raw.suspensionReason || "").trim(),
+    statusUpdatedAt: raw.statusUpdatedAt || "",
     phone: String(raw.phone || raw.contactNumber || "").trim(),
     address: String(raw.address || "").trim(),
     provider: String(raw.provider || raw.authProvider || "").trim(),
@@ -492,7 +548,14 @@ export function buildAdminEquipmentQueryString(filters = {}) {
 }
 
 export function normalizeAdminEquipmentItem(raw) {
-  return normalizeOwnerEquipmentItem(raw);
+  const base = normalizeOwnerEquipmentItem(raw);
+  if (!base) return null;
+  return {
+    ...base,
+    approvalHistory: Array.isArray(raw?.approvalHistory)
+      ? raw.approvalHistory
+      : [],
+  };
 }
 
 export function parseAdminRentalsFiltersFromParams(searchParams) {
@@ -586,6 +649,7 @@ export function normalizeAdminRental(raw) {
 
   return {
     ...base,
+    adminNote: String(raw?.adminNote || "").trim(),
     owner: {
       name: ownerName || "Listing Owner",
       email: ownerEmail,

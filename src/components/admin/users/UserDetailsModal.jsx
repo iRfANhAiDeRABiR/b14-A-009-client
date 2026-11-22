@@ -8,19 +8,33 @@ import {
   Loader2,
   Mail,
   MapPin,
+  Pencil,
   Phone,
+  ShieldAlert,
   ShieldCheck,
+  Trash2,
   User,
   X,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
-import { formatDisplayDate, getRoleBadgeVariant } from "@/lib/adminUtils";
+import {
+  formatDisplayDate,
+  getAccountStatusBadge,
+  getRoleBadgeVariant,
+} from "@/lib/adminUtils";
 import { getAdminUserById } from "@/services/adminUserService";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-export function UserDetailsModal({ userRecord, onClose }) {
+export function UserDetailsModal({
+  userRecord,
+  onClose,
+  onEdit = null,
+  onStatusAction = null,
+  onDelete = null,
+  isSelf = false,
+}) {
   const isOpen = Boolean(userRecord);
   const prefersReducedMotion = useReducedMotion();
   const { token } = useAuth();
@@ -227,8 +241,14 @@ export function UserDetailsModal({ userRecord, onClose }) {
                       {activeUser.role}
                     </Badge>
                     {activeUser.accountStatus ? (
-                      <Badge variant="neutral" size="sm">
-                        {activeUser.accountStatus}
+                      <Badge
+                        variant={
+                          getAccountStatusBadge(activeUser.accountStatus).variant
+                        }
+                        dot
+                        size="sm"
+                      >
+                        {getAccountStatusBadge(activeUser.accountStatus).label}
                       </Badge>
                     ) : null}
                   </div>
@@ -241,6 +261,13 @@ export function UserDetailsModal({ userRecord, onClose }) {
                   ) : null}
                 </div>
               </div>
+
+              {activeUser.suspensionReason ? (
+                <div className="rounded-xl border border-warning-border bg-warning-bg px-4 py-3 text-xs text-warning">
+                  <p className="font-semibold">Restriction Reason</p>
+                  <p className="mt-0.5">{activeUser.suspensionReason}</p>
+                </div>
+              ) : null}
 
               <dl className="grid gap-3 rounded-xl border border-border bg-background p-4 text-xs sm:grid-cols-2 sm:text-sm">
                 <div>
@@ -302,8 +329,55 @@ export function UserDetailsModal({ userRecord, onClose }) {
               </dl>
             </div>
 
-            <footer className="flex shrink-0 items-center justify-end gap-3 border-t border-border bg-background px-5 py-3.5 sm:rounded-b-2xl sm:px-6">
-              <Button variant="primary" size="md" onClick={onClose}>
+            <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2.5 border-t border-border bg-background px-5 py-3.5 sm:rounded-b-2xl sm:px-6">
+              {typeof onEdit === "function" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onEdit(activeUser);
+                  }}
+                >
+                  <Pencil aria-hidden="true" className="size-3.5" />
+                  <span>Edit Details</span>
+                </Button>
+              ) : null}
+
+              {typeof onStatusAction === "function" && !isSelf ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onStatusAction(activeUser);
+                  }}
+                >
+                  <ShieldAlert aria-hidden="true" className="size-3.5" />
+                  <span>
+                    {String(activeUser.accountStatus || "Active") === "Active"
+                      ? "Suspend / Ban"
+                      : "Manage Access"}
+                  </span>
+                </Button>
+              ) : null}
+
+              {typeof onDelete === "function" && !isSelf ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose();
+                    onDelete(activeUser);
+                  }}
+                  className="border-danger-border text-danger hover:bg-danger-bg"
+                >
+                  <Trash2 aria-hidden="true" className="size-3.5" />
+                  <span>Remove</span>
+                </Button>
+              ) : null}
+
+              <Button variant="primary" size="sm" onClick={onClose}>
                 Close
               </Button>
             </footer>

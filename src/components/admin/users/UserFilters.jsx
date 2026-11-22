@@ -5,6 +5,7 @@ import { ArrowUpDown, RotateCcw, X } from "lucide-react";
 import {
   ADMIN_USER_ROLE_OPTIONS,
   ADMIN_USER_SORT_OPTIONS,
+  ADMIN_USER_STATUS_OPTIONS,
 } from "@/lib/adminUtils";
 import { EquipmentSearch } from "@/components/equipment/EquipmentSearch";
 import { Button } from "@/components/ui/Button";
@@ -33,6 +34,13 @@ export function UserFilters({
       onRemove: () => onUpdateFilters({ role: "all" }),
     });
   }
+  if (filters.status && filters.status !== "all") {
+    activeChips.push({
+      key: "status",
+      label: `Status: ${filters.status}`,
+      onRemove: () => onUpdateFilters({ status: "all" }),
+    });
+  }
   if (filters.sort !== "newest") {
     const sortLabel =
       ADMIN_USER_SORT_OPTIONS.find((opt) => opt.value === filters.sort)
@@ -58,27 +66,48 @@ export function UserFilters({
           debounceMs={350}
         />
 
-        <div className="relative">
-          <label htmlFor="admin-users-sort" className="sr-only">
-            Sort users
-          </label>
-          <ArrowUpDown
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
-          />
-          <select
-            id="admin-users-sort"
-            value={filters.sort}
-            disabled={disabled}
-            onChange={(e) => onUpdateFilters({ sort: e.target.value })}
-            className="min-h-11 w-full cursor-pointer rounded-lg border border-border bg-surface pr-8 pl-9 text-sm text-foreground shadow-xs transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 lg:w-56"
-          >
-            {ADMIN_USER_SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <label htmlFor="admin-users-status" className="sr-only">
+              Filter by status
+            </label>
+            <select
+              id="admin-users-status"
+              value={filters.status || "all"}
+              disabled={disabled}
+              onChange={(e) => onUpdateFilters({ status: e.target.value })}
+              className="min-h-11 w-full cursor-pointer rounded-lg border border-border bg-surface px-3.5 text-sm text-foreground shadow-xs transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-44"
+            >
+              {ADMIN_USER_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="relative">
+            <label htmlFor="admin-users-sort" className="sr-only">
+              Sort users
+            </label>
+            <ArrowUpDown
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
+            />
+            <select
+              id="admin-users-sort"
+              value={filters.sort}
+              disabled={disabled}
+              onChange={(e) => onUpdateFilters({ sort: e.target.value })}
+              className="min-h-11 w-full cursor-pointer rounded-lg border border-border bg-surface pr-8 pl-9 text-sm text-foreground shadow-xs transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 lg:w-52"
+            >
+              {ADMIN_USER_SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

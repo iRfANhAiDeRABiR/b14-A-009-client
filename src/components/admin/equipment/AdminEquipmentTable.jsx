@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Boxes,
   CheckCircle2,
+  Download,
   Eye,
   MapPin,
   Pencil,
@@ -18,6 +19,7 @@ import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminEquipment } from "@/hooks/useAdminEquipment";
 import { formatDisplayDate } from "@/lib/adminUtils";
+import { downloadCsv } from "@/lib/csvExport";
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
 import {
   approveAdminEquipment,
@@ -87,6 +89,25 @@ export function AdminEquipmentTable() {
 
   const resolveToken = async () =>
     token || (typeof getToken === "function" ? await getToken() : null);
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      `gearnest-equipment-${new Date().toISOString().slice(0, 10)}.csv`,
+      [
+        { header: "ID", key: "_id" },
+        { header: "Name", key: "name" },
+        { header: "Category", key: "category" },
+        { header: "Status", key: "status" },
+        { header: "Rental Price", key: "rentalPrice" },
+        { header: "Rental Type", key: "rentalType" },
+        { header: "Qty", key: "availableQuantity" },
+        { header: "Location", key: "location" },
+        { header: "Owner", accessor: (r) => r.owner?.name || "" },
+        { header: "Submitted", accessor: (r) => formatDisplayDate(r.createdAt) },
+      ],
+      items
+    );
+  };
 
   const handleConfirmApprove = async () => {
     if (!approveTarget || actionBusyId) return;
@@ -217,18 +238,30 @@ export function AdminEquipmentTable() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          size="md"
-          disabled={loading}
-          onClick={retry}
-        >
-          <RefreshCw
-            aria-hidden="true"
-            className={`size-4 ${loading ? "animate-spin" : ""}`}
-          />
-          <span>Refresh</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="md"
+            disabled={loading || items.length === 0}
+            onClick={handleExportCsv}
+          >
+            <Download aria-hidden="true" className="size-4" />
+            <span>Export CSV</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="md"
+            disabled={loading}
+            onClick={retry}
+          >
+            <RefreshCw
+              aria-hidden="true"
+              className={`size-4 ${loading ? "animate-spin" : ""}`}
+            />
+            <span>Refresh</span>
+          </Button>
+        </div>
       </header>
 
       <OwnerEquipmentStats stats={stats} loading={loading} />

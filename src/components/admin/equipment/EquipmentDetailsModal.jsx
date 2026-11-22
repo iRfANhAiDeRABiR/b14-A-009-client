@@ -355,6 +355,44 @@ export function EquipmentDetailsModal({
                   </p>
                 </section>
               ) : null}
+
+              {Array.isArray(activeItem.approvalHistory) &&
+              activeItem.approvalHistory.length > 0 ? (
+                <section className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 border-b border-border pb-2.5">
+                    <Calendar aria-hidden="true" className="size-4 text-primary" />
+                    <h3 className="font-heading text-sm font-semibold text-foreground">
+                      Moderation Audit History
+                    </h3>
+                  </div>
+                  <ul className="mt-3 space-y-2 text-xs">
+                    {[...activeItem.approvalHistory]
+                      .reverse()
+                      .slice(0, 8)
+                      .map((entry, idx) => (
+                        <li
+                          key={`${entry.reviewedAt || idx}-${entry.newStatus}`}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2"
+                        >
+                          <div>
+                            <p className="font-semibold text-foreground">
+                              {entry.previousStatus || "Pending"} &rarr;{" "}
+                              {entry.newStatus}
+                            </p>
+                            {entry.rejectionReason ? (
+                              <p className="mt-0.5 text-text-secondary">
+                                Reason: {entry.rejectionReason}
+                              </p>
+                            ) : null}
+                          </div>
+                          <span className="text-text-secondary">
+                            {formatDisplayDate(entry.reviewedAt)}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                </section>
+              ) : null}
             </div>
 
             <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2.5 border-t border-border bg-background px-5 py-3.5 sm:rounded-b-2xl sm:px-6">

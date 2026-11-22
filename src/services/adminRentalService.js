@@ -141,3 +141,49 @@ export async function getAdminRentalById(rentalId, { token = null } = {}) {
 
   return normalizeAdminRental(record);
 }
+
+/**
+ * Update an internal Administrator governance note on a rental record:
+ * PATCH {NEXT_PUBLIC_API_BASE_URL}/api/admin/rentals/:id/note
+ */
+export async function updateAdminRentalNote(
+  rentalId,
+  { adminNote = "" } = {},
+  { token = null } = {}
+) {
+  const cleanId = decodeURIComponent(String(rentalId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("Booking ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("update rental governance notes");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError("PATCH /api/admin/rentals/:id/note");
+  }
+
+  const payload = await apiRequest(
+    `/api/admin/rentals/${encodeURIComponent(cleanId)}/note`,
+    {
+      method: "PATCH",
+      body: { adminNote: String(adminNote || "").trim() },
+      token: activeToken,
+      authRequired: true,
+    }
+  );
+
+  const record =
+    payload?.data && typeof payload.data === "object" ? payload.data : payload;
+  return {
+    record: normalizeAdminRental(record),
+    message:
+      typeof payload?.message === "string"
+        ? payload.message
+        : "Rental governance note updated.",
+  };
+}

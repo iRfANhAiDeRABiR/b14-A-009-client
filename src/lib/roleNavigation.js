@@ -117,6 +117,18 @@ export const ADMIN_SIDEBAR_ITEMS = [
     description: "Monitor platform bookings, statuses, and settlements",
   },
   {
+    label: "Support Inquiries",
+    href: "/dashboard/admin/inquiries",
+    icon: "inquiries",
+    description: "Review, respond to, and resolve customer & owner inquiries",
+  },
+  {
+    label: "Event Log",
+    href: "/dashboard/admin/logs",
+    icon: "logs",
+    description: "Audit administrative actions, moderation history, and system events",
+  },
+  {
     label: "My Profile",
     href: "/dashboard/admin/profile",
     icon: "profile",
@@ -227,6 +239,8 @@ const SEGMENT_LABELS = {
   rentals: "Rentals",
   users: "All Users",
   equipment: "All Equipment",
+  logs: "Event Log",
+  inquiries: "Support Inquiries",
 };
 
 export function getDashboardBreadcrumbs(pathname = "/dashboard", role = null) {

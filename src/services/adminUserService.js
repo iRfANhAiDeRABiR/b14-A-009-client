@@ -34,6 +34,7 @@ function createBackendUnavailableError(endpointLabel) {
 export async function getAdminUsers({
   search = "",
   role = "all",
+  status = "all",
   sort = "newest",
   page = 1,
   limit = DEFAULT_ADMIN_PAGE_LIMIT,
@@ -65,6 +66,10 @@ export async function getAdminUsers({
 
   if (role && role !== "all") {
     params.set("role", normalizeDisplayRole(role));
+  }
+
+  if (status && status !== "all") {
+    params.set("status", String(status).trim());
   }
 
   if (sort) {
@@ -174,6 +179,108 @@ export async function updateAdminUserRole(
   return apiRequest(`/api/admin/users/${encodeURIComponent(cleanId)}/role`, {
     method: "PATCH",
     body: { role: resolvedRole },
+    token: activeToken,
+    authRequired: true,
+  });
+}
+
+/**
+ * Update a user's account access status (Active | Suspended | Banned):
+ * PATCH {NEXT_PUBLIC_API_BASE_URL}/api/admin/users/:id/status
+ */
+export async function updateAdminUserStatus(
+  userId,
+  { status, reason = "" } = {},
+  { token = null } = {}
+) {
+  const cleanId = decodeURIComponent(String(userId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("User ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("update user account status");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError("PATCH /api/admin/users/:id/status");
+  }
+
+  return apiRequest(`/api/admin/users/${encodeURIComponent(cleanId)}/status`, {
+    method: "PATCH",
+    body: {
+      status: String(status || "").trim(),
+      ...(reason !== undefined ? { reason: String(reason || "").trim() } : {}),
+    },
+    token: activeToken,
+    authRequired: true,
+  });
+}
+
+/**
+ * Update safe user profile metadata from Admin Panel:
+ * PATCH {NEXT_PUBLIC_API_BASE_URL}/api/admin/users/:id
+ */
+export async function updateAdminUserDetails(
+  userId,
+  { name, phone, address } = {},
+  { token = null } = {}
+) {
+  const cleanId = decodeURIComponent(String(userId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("User ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("update user account profile");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError("PATCH /api/admin/users/:id");
+  }
+
+  const body = {};
+  if (name !== undefined) body.name = String(name).trim();
+  if (phone !== undefined) body.phone = String(phone).trim();
+  if (address !== undefined) body.address = String(address).trim();
+
+  return apiRequest(`/api/admin/users/${encodeURIComponent(cleanId)}`, {
+    method: "PATCH",
+    body,
+    token: activeToken,
+    authRequired: true,
+  });
+}
+
+/**
+ * Archive & remove a user account safely:
+ * DELETE {NEXT_PUBLIC_API_BASE_URL}/api/admin/users/:id
+ */
+export async function deleteAdminUser(userId, { token = null } = {}) {
+  const cleanId = decodeURIComponent(String(userId || "")).trim();
+  if (!cleanId) {
+    throw new ApiError("User ID is required.", {
+      status: 400,
+      code: "BAD_REQUEST",
+    });
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("remove user accounts");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError("DELETE /api/admin/users/:id");
+  }
+
+  return apiRequest(`/api/admin/users/${encodeURIComponent(cleanId)}`, {
+    method: "DELETE",
     token: activeToken,
     authRequired: true,
   });
