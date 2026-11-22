@@ -1,152 +1,680 @@
-# GearNest — Equipment Rental Platform
+::: {align="center"}
+# 🟢 GearNest
 
-GearNest is a multi-role equipment rental marketplace built with Next.js (App Router) and React 19, connecting customers with verified equipment owners across construction, photography, transportation, agriculture, electronics, and event production.
+### Find the right equipment. Rent with confidence.
 
-## Project Overview
+**A modern equipment rental marketplace connecting customers with
+equipment owners.**
 
-GearNest organizes marketplace operations around three role-protected portals while maintaining public catalog discovery:
+```{=html}
+<p>
+```
+`<a href="https://github.com/iRfANhAiDeRABiR/b14-A-009-client">`{=html}
+`<img src="https://img.shields.io/badge/Repository-GitHub-181717?style=for-the-badge&logo=github" alt="GitHub repository">`{=html}
+`</a>`{=html}
+`<img src="https://img.shields.io/badge/Next.js-16.4.6-000000?style=for-the-badge&logo=next.js" alt="Next.js">`{=html}
+`<img src="https://img.shields.io/badge/React-19.3.0-149ECA?style=for-the-badge&logo=react" alt="React">`{=html}
+`<img src="https://img.shields.io/badge/Tailwind_CSS-4.3.3-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS">`{=html}
+`<img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=222222" alt="JavaScript">`{=html}
+```{=html}
+</p>
+```
+[Explore the
+repository](https://github.com/iRfANhAiDeRABiR/b14-A-009-client) ·
+[Report an
+issue](https://github.com/iRfANhAiDeRABiR/b14-A-009-client/issues)
+:::
 
-- **Customers:** Browse approved equipment listings, filter and sort by category, price, rental type, and availability, calculate rental estimates, save favorites, submit reservations, pay via Stripe Hosted Checkout, and inspect rental & transaction history.
-- **Equipment Owners:** View fleet analytics, publish new equipment listings with validated specs and secure backend image uploads, edit or delete owned listings, and monitor bookings placed against their fleet.
-- **Administrators:** Monitor platform-wide user, inventory, booking, and settled revenue analytics, manage user roles (`Customer`, `Owner`, `Admin`), review and moderate equipment submissions (`Approve`, `Reject`, `Update`, `Delete`), and audit marketplace rentals.
+------------------------------------------------------------------------
 
-## Live Website
+## ✨ About GearNest
 
-- **Production Live URL:** Pending deployment (not yet deployed to a public host).
-- **Local Development URL:** [http://localhost:3000](http://localhost:3000)
+GearNest is a responsive, multi-role equipment rental marketplace built
+with **Next.js App Router and React**. It brings equipment discovery,
+rental planning, booking interfaces, payment experiences, and
+role-specific management tools into one platform.
 
-## Client Repository
+Whether someone needs construction machinery for a project, photography
+equipment for a shoot, or event equipment for a special occasion,
+GearNest is designed to make the rental journey easier to navigate.
 
-- **GitHub Repository:** `https://github.com/iRfANhAiDeRABiR/b14-A-009-client-`
+The client application is organized around three user experiences:
 
-## Key Features
+  -----------------------------------------------------------------------
+  🧑 Customer             🧰 Equipment Owner      🛡️ Administrator
+  ----------------------- ----------------------- -----------------------
+  Discover equipment,     Submit and manage       Manage users, moderate
+  compare listings, save  equipment listings,     equipment listings,
+  favorites, plan         monitor rental          monitor rentals, and
+  rentals, and review     activity, and review    review platform
+  booking history.        business analytics.     analytics.
 
-- **Public Equipment Marketplace:** Multi-page storefront (`/`, `/equipment`, `/equipment/[id]`, `/how-it-works`, `/about`, `/contact`, `/help-center`, `/terms`, `/privacy`) with dynamic search, filters, sorting, and server-compatible pagination.
-- **Authentication & Role-Based Authorization:** Email/password registration and sign-in, Google OAuth entry, Better Auth HTTP-only session client with memory-cached JWT retrieval (`better-auth/client/plugins`), persistent session reloads, and fail-closed `ProtectedRoute` portals for Customers, Owners, and Admins.
-- **Customer Workspace:** Overview analytics, advanced booking history with search/status/payment filters, synchronized MongoDB-backed favorites management, profile updates, rental pricing estimator, and Stripe Hosted Checkout confirmation/cancellation pages.
-- **Owner Workspace:** Business analytics cards and interactive monthly earnings/rental charts, equipment listing creation and editing with upload progress, inventory status tracking (`Pending`, `Approved`, `Rejected`), and owner-scoped rental bookings monitor.
-- **Admin Workspace:** Seven-metric platform overview, monthly booking and revenue charts, equipment approval distribution chart, platform activity feed, user role management, equipment approval/rejection/edit/delete moderation, and cross-platform rental auditing.
-- **Global Experience & Polish:** Branded App Router loading states, route/global error boundaries, 404 recovery page, responsive mobile/tablet/desktop layouts, WCAG-conscious focus states, `prefers-reduced-motion` support, and persistent Dark/Light mode toggle.
+  -----------------------------------------------------------------------
 
-## Technology Stack
+## 🚀 What You Can Do
 
-- **Framework:** Next.js `16.4.6` (App Router, `cacheComponents: true`, `partialPrefetching: true`)
-- **UI Runtime:** React `19.3.0` (`JavaScript`, zero TypeScript files)
-- **Styling:** Tailwind CSS `4.3.3` with CSS variable design tokens for Light & Dark themes
-- **Authentication Client:** Better Auth `^1.7.27` (`better-auth/react` + `jwtClient`)
-- **Animations:** Framer Motion `^14.14.0`
-- **Icons:** Lucide React `^1.77.0`
-- **Class Utilities:** `clsx` `^2.1.1`, `tailwind-merge` `^3.7.1`
-- **Charts & Visualizations:** Custom accessible GearNest SVG/CSS bar, trend line, and donut charts (note: `recharts` is not installed in `package.json`)
+### 🛍️ Discover the Marketplace
 
-## Installed npm Packages
+-   Explore equipment through a responsive public catalog.
+-   View equipment details, images, rental prices, locations, and
+    listing information.
+-   Search and refine the catalog using category, rental type, price,
+    and availability controls.
+-   Sort listings and navigate paginated results.
+-   Explore featured equipment and marketplace categories.
 
-From [`package.json`](package.json):
+### 👤 Customer Experience
 
-### Dependencies
+-   Access a dedicated Customer dashboard.
+-   Review rental history and booking details.
+-   Search and filter rental records by relevant status.
+-   Save and manage favorite equipment.
+-   Update profile information.
+-   Estimate rental costs using the rental calculator.
+-   Continue to Stripe Hosted Checkout through the booking flow.
+-   View payment success, processing, and cancellation states.
 
-- `better-auth`: `^1.7.27`
-- `clsx`: `^2.1.1`
-- `framer-motion`: `^14.14.0`
-- `lucide-react`: `^1.77.0`
-- `next`: `16.4.6`
-- `react`: `19.3.0`
-- `react-dom`: `19.3.0`
-- `tailwind-merge`: `^3.7.1`
+### 🧰 Equipment Owner Experience
 
-### DevDependencies
+-   View an Owner dashboard with business overview cards and charts.
+-   Submit new equipment listings.
+-   Upload equipment images through the configured upload flow.
+-   Edit and manage owned equipment.
+-   Track listing review states: `Pending`, `Approved`, and `Rejected`.
+-   Review rental bookings associated with owned equipment.
+-   Monitor earnings and rental activity visualizations.
 
-- `@tailwindcss/turbopack`: `4.3.3`
-- `eslint`: `^9`
-- `eslint-config-next`: `16.4.6`
-- `tailwindcss`: `4.3.3`
+### 🛡️ Admin Experience
 
-## Installation
+-   View platform-level dashboard analytics.
+-   Review user, equipment, booking, and revenue summaries.
+-   Manage user roles: `Customer`, `Owner`, and `Admin`.
+-   Review equipment submissions.
+-   Approve or reject equipment listings.
+-   Update or remove equipment listings.
+-   Monitor platform-wide rental records.
 
-Install dependencies inside the `client` directory:
+### 🎨 Interface & Experience
 
-```bash
-cd client
+-   Responsive layouts for mobile, tablet, and desktop.
+-   Consistent GearNest visual design system.
+-   Light and dark theme support.
+-   Reusable loading and skeleton states.
+-   Route-level and global error handling.
+-   Custom not-found experience.
+-   Accessible form labels, focus states, and keyboard interactions.
+-   Reduced-motion support where applicable.
+
+> **Integration note:** The frontend contains the user interfaces and
+> service-layer integrations for these workflows. Features that read or
+> change persistent data require the matching Express API, MongoDB
+> configuration, OAuth credentials, and Stripe configuration. See
+> [Integration Status](#-integration-status).
+
+------------------------------------------------------------------------
+
+## 🧭 Application Preview
+
+The main application areas are organized as follows:
+
+  -----------------------------------------------------------------------
+  Area                    Route                   Purpose
+  ----------------------- ----------------------- -----------------------
+  Home                    `/`                     Marketplace landing
+                                                  page and featured
+                                                  equipment
+
+  Equipment               `/equipment`            Browse, search, filter,
+                                                  and sort equipment
+
+  Equipment details       `/equipment/[id]`       Review a listing and
+                                                  start a rental
+
+  How It Works            `/how-it-works`         Customer and Owner
+                                                  workflow guide
+
+  About                   `/about`                Platform story,
+                                                  mission, and values
+
+  Contact                 `/contact`              Contact and inquiry
+                                                  form
+
+  Login                   `/login`                Sign in
+
+  Register                `/register`             Create an account
+  -----------------------------------------------------------------------
+
+### Customer Dashboard
+
+  Route                              Purpose
+  ---------------------------------- --------------------
+  `/dashboard/customer`              Customer overview
+  `/dashboard/customer/my-rentals`   Rental history
+  `/dashboard/customer/favorites`    Saved equipment
+  `/dashboard/customer/profile`      Profile management
+
+### Owner Dashboard
+
+  Route                                       Purpose
+  ------------------------------------------- ---------------------------
+  `/dashboard/owner`                          Owner analytics overview
+  `/dashboard/owner/add-equipment`            Submit equipment
+  `/dashboard/owner/my-equipment`             Manage owned listings
+  `/dashboard/owner/my-equipment/edit/[id]`   Edit a listing
+  `/dashboard/owner/rentals`                  Monitor equipment rentals
+  `/dashboard/owner/profile`                  Profile management
+
+### Admin Dashboard
+
+  Route                          Purpose
+  ------------------------------ ----------------------------
+  `/dashboard/admin`             Platform analytics
+  `/dashboard/admin/users`       User and role management
+  `/dashboard/admin/equipment`   Equipment moderation
+  `/dashboard/admin/rentals`     Platform rental monitoring
+  `/dashboard/admin/profile`     Profile management
+
+### Payment Return Routes
+
+  -----------------------------------------------------------------------
+  Route                               Purpose
+  ----------------------------------- -----------------------------------
+  `/payment/success`                  Check and display the
+                                      backend-verified payment result
+
+  `/payment/cancel`                   Handle a cancelled Checkout session
+                                      and eligible retry flow
+  -----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 🧱 Technology Stack
+
+  Technology                  Role
+  --------------------------- -----------------------------------------
+  **Next.js 16.4.6**          React framework and App Router
+  **React 19.3.0**            Component-based UI
+  **JavaScript**              Application language
+  **Tailwind CSS 4.3.3**      Utility-first styling and design tokens
+  **Better Auth 1.7.27**      Authentication client integration
+  **Framer Motion 14.14.0**   UI animation and transitions
+  **Lucide React 1.77.0**     Interface icons
+  **clsx 2.1.1**              Conditional class names
+  **tailwind-merge 3.7.1**    Tailwind class conflict handling
+  **Custom SVG/CSS charts**   Dashboard data visualization
+
+### Package Inventory
+
+The package versions below are based on the project information supplied
+for this README. Check the repository's current `package.json` before
+changing dependencies.
+
+```{=html}
+<details>
+```
+```{=html}
+<summary>
+```
+`<strong>`{=html}Production dependencies`</strong>`{=html}
+```{=html}
+</summary>
+```
+  Package                 Version
+  ------------------ ------------
+  `better-auth`         `^1.7.27`
+  `clsx`                 `^2.1.1`
+  `framer-motion`      `^14.14.0`
+  `lucide-react`        `^1.77.0`
+  `next`                 `16.4.6`
+  `react`                `19.3.0`
+  `react-dom`            `19.3.0`
+  `tailwind-merge`       `^3.7.1`
+
+```{=html}
+</details>
+```
+```{=html}
+<details>
+```
+```{=html}
+<summary>
+```
+`<strong>`{=html}Development dependencies`</strong>`{=html}
+```{=html}
+</summary>
+```
+  Package                       Version
+  -------------------------- ----------
+  `@tailwindcss/turbopack`      `4.3.3`
+  `eslint`                         `^9`
+  `eslint-config-next`         `16.4.6`
+  `tailwindcss`                 `4.3.3`
+
+```{=html}
+</details>
+```
+
+------------------------------------------------------------------------
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+-   Node.js compatible with the installed Next.js version.
+-   npm.
+-   Git.
+-   The GearNest Express API for backend-dependent functionality.
+
+### 1. Clone the repository
+
+``` bash
+git clone https://github.com/iRfANhAiDeRABiR/b14-A-009-client.git
+cd b14-A-009-client
+```
+
+### 2. Install dependencies
+
+``` bash
 npm install
 ```
 
-## Environment Setup
+### 3. Configure environment variables
 
-Copy `.env.example` to `.env.local` and supply environment values without committing `.env.local` to Git:
+Create a local environment file from the example:
 
-```bash
+``` bash
 cp .env.example .env.local
 ```
 
-Client variables documented in [`.env.example`](.env.example):
+On Windows PowerShell:
 
-- `NEXT_PUBLIC_API_BASE_URL` — Base URL of the Express backend server (e.g. `http://localhost:5000`)
-- `NEXT_PUBLIC_SITE_URL` — Public URL of the Next.js client (e.g. `http://localhost:3000`) for metadata and Open Graph resolution
-- `NEXT_PUBLIC_IMGBB_API_KEY` — Optional key for direct registration avatar uploads (owner equipment photos proxy through the Express API)
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Optional placeholder for client-side Stripe test key (`STRIPE_SECRET_KEY`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, and database URIs must remain strictly on the Express backend)
+``` powershell
+Copy-Item .env.example .env.local
+```
 
-## Development
+Add the correct values to `.env.local`. Never commit this file.
 
-Start the Next.js development server:
+### 4. Start the development server
 
-```bash
+``` bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open **http://localhost:3000** in your browser.
 
-## Production Build
+------------------------------------------------------------------------
 
-Run ESLint and verify an optimized production build locally:
+## 🔐 Environment Configuration
 
-```bash
+The frontend uses public environment variables for browser-accessible
+configuration.
+
+Example `.env.local`:
+
+``` env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Optional: only when direct browser-based avatar upload is enabled.
+NEXT_PUBLIC_IMGBB_API_KEY=
+
+# Optional: only when the frontend directly uses Stripe.js.
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+```
+
+  --------------------------------------------------------------------------
+  Variable                               Description
+  -------------------------------------- -----------------------------------
+  `NEXT_PUBLIC_API_BASE_URL`             Express API base URL
+
+  `NEXT_PUBLIC_SITE_URL`                 Frontend URL used for metadata and
+                                         return URL construction
+
+  `NEXT_PUBLIC_IMGBB_API_KEY`            Optional browser-side ImgBB key if
+                                         direct avatar upload is enabled
+
+  `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`   Optional Stripe publishable key for
+                                         browser-side Stripe.js use
+  --------------------------------------------------------------------------
+
+### Security Rules
+
+-   Anything prefixed with `NEXT_PUBLIC_` can be exposed in the browser
+    bundle.
+-   Never put `MONGODB_URI`, `BETTER_AUTH_SECRET`,
+    `GOOGLE_CLIENT_SECRET`, `STRIPE_SECRET_KEY`, or
+    `STRIPE_WEBHOOK_SECRET` in the client environment.
+-   Keep private credentials in the Express backend environment.
+-   Use a backend upload proxy for image services whenever possible.
+-   Do not commit `.env.local`.
+
+------------------------------------------------------------------------
+
+## 🧪 Available Scripts
+
+Run these commands from the project root:
+
+  Command           Description
+  ----------------- --------------------------------------
+  `npm run dev`     Start the development server
+  `npm run lint`    Run ESLint
+  `npm run build`   Create an optimized production build
+  `npm run start`   Start the production server
+
+Before deployment, run:
+
+``` bash
 npm run lint
 npm run build
+```
+
+After a successful build:
+
+``` bash
 npm run start
 ```
 
-## Deployment
+------------------------------------------------------------------------
 
-The client app is configured for standard Next.js deployment (including Vercel):
+## 🔒 Authentication & Authorization
 
-1. Set Root Directory to `client` when connecting the repository to Vercel or your Node host.
-2. Configure production environment variables (`NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_SITE_URL`, and optional public keys) in the hosting dashboard.
-3. Configure the Express backend CORS policy to accept requests (with `credentials: true`) from the deployed Next.js origin.
-4. Register the deployed frontend callback/return URLs in Better Auth, Google OAuth, and Stripe Checkout (`${CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}` and `${CLIENT_URL}/payment/cancel`).
+The client is designed to integrate with a Better Auth server.
 
-## Application Routes
+### Authentication methods
 
-### Public & Marketplace Routes
+-   Email and password.
+-   Google OAuth.
+-   Session-aware navigation.
+-   JWT retrieval for protected API requests.
 
-- `/` — Marketplace landing page
-- `/equipment` — All approved equipment catalog with search, filters, sorting, and pagination
-- `/equipment/[id]` — Equipment details, rental price calculator, favorites, and booking modal
-- `/how-it-works`, `/about`, `/contact`, `/help-center`, `/terms`, `/privacy` — Informational pages
-- `/login`, `/register` — Authentication pages
+### Role-based experience
 
-### Stripe Checkout Return Routes (Protected)
+  Role         Dashboard
+  ------------ -----------------------
+  `Customer`   `/dashboard/customer`
+  `Owner`      `/dashboard/owner`
+  `Admin`      `/dashboard/admin`
 
-- `/payment/success` — Server-verified checkout session polling & confirmation view
-- `/payment/cancel` — Checkout cancellation handler & eligible retry flow
+### Security approach
 
-### Role-Protected Dashboard Routes (`noindex`)
+-   Better Auth manages the browser session using HTTP-only cookies.
+-   The client retrieves access JWTs through the configured token
+    provider.
+-   Access tokens are cached in memory rather than persisted in
+    `localStorage` or `sessionStorage`.
+-   Protected API requests use the `Authorization: Bearer` header.
+-   Unauthorized and forbidden responses are handled by the client.
+-   Frontend route protection improves navigation experience, while the
+    backend must independently enforce authorization.
+-   A payment success redirect is not treated as proof of payment; the
+    client must retrieve the verified status from the backend.
 
-- `/dashboard` — Session role router
-- **Customer:** `/dashboard/customer`, `/dashboard/customer/my-rentals`, `/dashboard/customer/favorites`, `/dashboard/customer/profile`
-- **Owner:** `/dashboard/owner`, `/dashboard/owner/add-equipment`, `/dashboard/owner/my-equipment`, `/dashboard/owner/my-equipment/edit/[id]`, `/dashboard/owner/rentals`, `/dashboard/owner/profile`
-- **Admin:** `/dashboard/admin`, `/dashboard/admin/users`, `/dashboard/admin/equipment`, `/dashboard/admin/rentals`, `/dashboard/admin/profile`
+The `gearnest-theme` local-storage value is used for theme preference
+only. It is not an authentication credential.
 
-## Authentication & Security Architecture
+------------------------------------------------------------------------
 
-- Better Auth manages HTTP-only session cookies and issues short-lived JWTs cached strictly in memory (`src/lib/token-provider.js`), never written to `localStorage` or `sessionStorage` (`localStorage` stores only UI `"gearnest-theme"` preference).
-- All protected API calls attach `Authorization: Bearer <jwt>` and handle `401` and `403` fail-closed.
-- Owners cannot modify approval statuses (`Pending`, `Approved`, `Rejected`), and Stripe Checkout URLs are validated strictly against HTTPS `checkout.stripe.com` hosts before navigation. Payment confirmation relies exclusively on backend session verification and Stripe webhook processing.
+## 💳 Booking & Payment Experience
 
-## API Configuration
+The client booking journey is designed around this flow:
 
-All service modules (`authService`, `contactService`, `profileService`, `equipmentService`, `imageUploadService`, `favoriteService`, `bookingService`, `paymentService`, `customerService`, `ownerAnalyticsService`, `adminAnalyticsService`, `adminUserService`, `adminEquipmentService`, `adminRentalService`) read `NEXT_PUBLIC_API_BASE_URL` via centralized [`src/lib/apiClient.js`](src/lib/apiClient.js) and [`src/lib/auth-client.js`](src/lib/auth-client.js) without hardcoded component URLs or fake data overrides on API failure.
+1.  Customer opens an approved equipment listing.
+2.  Customer selects rental dates and quantity.
+3.  The interface displays an estimated rental amount.
+4.  The booking request is submitted to the backend.
+5.  The backend validates availability and calculates the authoritative
+    amount.
+6.  The backend creates a Stripe Checkout Session.
+7.  The customer is redirected to Stripe Hosted Checkout.
+8.  Stripe sends payment events to the backend.
+9.  The backend verifies payment and updates booking records.
+10. The client retrieves the verified payment status.
 
-## Known Limitations
+**Important:** Rental price and inventory availability must always be
+validated by the backend. The browser must not mark a booking as paid or
+confirmed by itself.
 
-- **Express Backend Pending:** The companion `server/` application is not yet implemented, so live database persistence, Better Auth server routes (`/api/auth/*`), MongoDB aggregations, owner image upload proxying, `POST /api/contact` inquiry persistence, Stripe Checkout session creation (`POST /api/payments/create-checkout-session`), and Stripe webhook fulfillment (`checkout.session.completed`) remain awaiting backend development and end-to-end integration testing.
-- **Public Catalog Fallback:** Public `/equipment` discovery gracefully supports curated demo preview records when the backend API is unreachable or unconfigured, clearly distinguished from live authenticated dashboard modules which require a running Express server.
+------------------------------------------------------------------------
+
+## 🗂️ Frontend Structure
+
+The supplied project information identifies the following important
+modules. Use the current repository tree as the source of truth if files
+have moved.
+
+``` text
+src/
+├── app/
+│   ├── equipment/
+│   ├── how-it-works/
+│   ├── about/
+│   ├── contact/
+│   ├── login/
+│   ├── register/
+│   ├── dashboard/
+│   │   ├── customer/
+│   │   ├── owner/
+│   │   └── admin/
+│   └── payment/
+├── components/
+├── lib/
+│   ├── apiClient.js
+│   ├── auth-client.js
+│   └── token-provider.js
+└── services/
+    ├── authService
+    ├── contactService
+    ├── profileService
+    ├── equipmentService
+    ├── imageUploadService
+    ├── favoriteService
+    ├── bookingService
+    ├── paymentService
+    ├── customerService
+    ├── ownerAnalyticsService
+    ├── adminAnalyticsService
+    ├── adminUserService
+    ├── adminEquipmentService
+    └── adminRentalService
+```
+
+------------------------------------------------------------------------
+
+## 🔌 Integration Status
+
+The frontend contains the screens, interactions, and service-layer
+integration points for the workflows described above. Persistent
+functionality depends on a compatible Express backend and correctly
+configured external services.
+
+  -----------------------------------------------------------------------
+  Integration                         Required configuration / service
+  ----------------------------------- -----------------------------------
+  Authentication                      Better Auth server, MongoDB
+                                      adapter, trusted origins
+
+  Google login                        Google OAuth Client ID and Client
+                                      Secret on the backend
+
+  User and role management            Protected Express user APIs
+
+  Equipment catalog                   Equipment APIs and MongoDB
+
+  Image uploads                       ImgBB configuration and/or backend
+                                      upload proxy
+
+  Favorites                           Customer-scoped Favorites APIs
+
+  Rental booking                      Availability, pricing, and booking
+                                      APIs
+
+  Stripe Checkout                     Server-created Checkout Sessions
+
+  Payment confirmation                Verified Stripe webhooks and
+                                      payment records
+
+  Contact form                        Contact API and database
+                                      persistence
+
+  Dashboard analytics                 Admin and Owner MongoDB aggregation
+                                      APIs
+  -----------------------------------------------------------------------
+
+Update this section as integrations are completed and tested. Do not
+describe a UI-only feature as a live backend operation.
+
+------------------------------------------------------------------------
+
+## 🌍 Deployment
+
+The project is structured for standard Next.js deployment, including
+Vercel.
+
+### Vercel setup
+
+1.  Import the client repository into Vercel.
+2.  Set the project root to the directory containing the frontend
+    `package.json`.
+3.  Configure the production environment variables.
+4.  Set `NEXT_PUBLIC_API_BASE_URL` to the deployed Express API URL.
+5.  Set `NEXT_PUBLIC_SITE_URL` to the deployed frontend URL.
+6.  Configure the backend CORS allowlist for the exact frontend origin.
+7.  Configure Better Auth trusted origins and production base URL.
+8.  Add the production Google OAuth callback URI in Google Cloud.
+9.  Configure Stripe success and cancellation return URLs.
+10. Deploy and verify direct route navigation and browser refresh.
+
+### Production checklist
+
+-   [ ] Homepage loads without runtime errors.
+-   [ ] Equipment pages load directly and after refresh.
+-   [ ] Login and logout work.
+-   [ ] Session persists after refreshing a protected route.
+-   [ ] Customer, Owner, and Admin permissions are enforced.
+-   [ ] Frontend can reach the production API.
+-   [ ] CORS and credentialed requests work.
+-   [ ] Checkout redirects to a valid Stripe-hosted URL.
+-   [ ] Payment success is based on backend verification.
+-   [ ] No private credentials are exposed in the client bundle.
+
+**Live URL:** Add the verified production URL after deployment.
+
+------------------------------------------------------------------------
+
+## 🖼️ Screenshots
+
+A visual README is strongest when it includes real screenshots from the
+finished application.
+
+Suggested files:
+
+``` text
+docs/
+└── screenshots/
+    ├── homepage.png
+    ├── equipment-catalog.png
+    ├── equipment-details.png
+    ├── login.png
+    ├── customer-dashboard.png
+    ├── owner-dashboard.png
+    └── admin-dashboard.png
+```
+
+After adding the screenshot files, display them with:
+
+``` md
+![GearNest homepage](docs/screenshots/homepage.png)
+```
+
+Only reference screenshots that have actually been added to the
+repository.
+
+------------------------------------------------------------------------
+
+## 🛠️ Troubleshooting
+
+  -----------------------------------------------------------------------
+  Problem                             What to check
+  ----------------------------------- -----------------------------------
+  API request fails                   Confirm `NEXT_PUBLIC_API_BASE_URL`
+                                      and that the Express server is
+                                      running.
+
+  CORS error                          Check the backend allowlist and
+                                      credential settings.
+
+  Google login fails                  Verify the backend OAuth
+                                      credentials, trusted origin, and
+                                      exact callback URI.
+
+  Session disappears after refresh    Check Better Auth cookie
+                                      configuration, API origin, and
+                                      credentialed requests.
+
+  Dashboard shows `401`               Check session validity and JWT
+                                      retrieval.
+
+  Dashboard shows `403`               Confirm the authenticated user's
+                                      actual database role.
+
+  Equipment list is empty             Check the equipment API and whether
+                                      approved listings exist.
+
+  Checkout cannot start               Check the backend payment endpoint,
+                                      Stripe configuration, and booking
+                                      reservation status.
+
+  Payment remains pending             Check webhook delivery and backend
+                                      payment verification.
+  -----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## 📌 Project Status
+
+GearNest's client is organized around the public marketplace and the
+Customer, Owner, and Admin experiences. The final production status
+depends on the connected backend, configured credentials, deployment,
+and end-to-end testing.
+
+  Area                         Status to verify
+  ---------------------------- -------------------------------------------
+  Public marketplace UI        Implemented in client
+  Customer dashboard UI        Implemented in client
+  Owner dashboard UI           Implemented in client
+  Admin dashboard UI           Implemented in client
+  Authentication integration   Requires configured Better Auth server
+  Database-backed operations   Requires Express and MongoDB
+  Stripe payment flow          Requires Checkout and webhook integration
+  Production deployment        Add URL after deployment verification
+
+------------------------------------------------------------------------
+
+## 📋 Assignment Submission Checklist
+
+-   [ ] Client repository published to GitHub.
+-   [ ] At least 20 meaningful client commits.
+-   [ ] Server repository published to GitHub.
+-   [ ] At least 12 meaningful server commits.
+-   [ ] README includes project purpose, live URL, key features, and npm
+    packages.
+-   [ ] Frontend configuration uses environment variables.
+-   [ ] MongoDB credentials are stored only in the backend environment.
+-   [ ] Production frontend and backend are deployed.
+-   [ ] Direct route refresh works.
+-   [ ] Authenticated users remain signed in after refresh.
+-   [ ] Customer, Owner, and Admin permissions are tested.
+-   [ ] Stripe test-mode checkout and webhook flow are verified.
+
+------------------------------------------------------------------------
+
+::: {align="center"}
+### GearNest
+
+**Equipment rental, made simpler.**
+
+Built with Next.js, React, and a focus on a clear rental experience.
+
+[Back to
+repository](https://github.com/iRfANhAiDeRABiR/b14-A-009-client)
+:::
