@@ -148,3 +148,39 @@ export async function getBookingPaymentStatus(bookingId, { token = null } = {}) 
 
   return normalized;
 }
+
+/**
+ * Ask the backend to reconcile and confirm an already-paid Stripe Checkout session
+ * directly against Stripe's API if the async webhook has not yet finalized it:
+ * POST {NEXT_PUBLIC_API_BASE_URL}/api/payments/session/:sessionId/verify
+ */
+export async function verifyPaymentSession(sessionId, { token = null } = {}) {
+  const cleanSessionId = String(sessionId || "").trim();
+  if (!isValidStripeSessionId(cleanSessionId)) {
+    throw new ApiError(
+      "The provided checkout session reference is missing or invalid.",
+      { status: 400, code: "INVALID_SESSION_REFERENCE" }
+    );
+  }
+
+  const activeToken = token || (await getAccessToken());
+  if (!activeToken) {
+    throw createAuthRequiredError("verify payment with Stripe");
+  }
+  if (!API_BASE_URL) {
+    throw createBackendUnavailableError(
+      "POST /api/payments/session/:sessionId/verify"
+    );
+  }
+
+  const response = await apiRequest(
+    `/api/payments/session/${encodeURIComponent(cleanSessionId)}/verify`,
+    {
+      method: "POST",
+      token: activeToken,
+      authRequired: true,
+    }
+  );
+
+  return normalizePaymentSessionPayload(response);
+}

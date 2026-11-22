@@ -3,6 +3,7 @@
 import { ArrowLeft, ClipboardList, CreditCard, XCircle } from "lucide-react";
 
 import { PaymentSummary } from "@/components/payment/PaymentSummary";
+import { StripeTestCardBox } from "@/components/payment/StripeTestCardBox";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
@@ -45,15 +46,16 @@ export function PaymentPending({
         </p>
       </div>
 
-      {loading ? (
-        <p className="mt-6 rounded-xl border border-border bg-background px-4 py-3 text-center text-xs text-text-secondary">
-          Checking current booking and payment status from backend...
-        </p>
-      ) : sessionData ? (
-        <div className="mt-6">
-          <PaymentSummary sessionData={sessionData} />
+      {sessionData ? (
+        <div className="mt-6 space-y-4">
+          {!loading ? <PaymentSummary sessionData={sessionData} /> : null}
+          <StripeTestCardBox compact />
         </div>
-      ) : null}
+      ) : (
+        <div className="mt-6">
+          <StripeTestCardBox compact />
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 border-t border-border pt-5">
         {canLaunchRetry ? (

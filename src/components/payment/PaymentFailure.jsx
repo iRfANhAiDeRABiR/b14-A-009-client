@@ -3,6 +3,7 @@
 import { AlertCircle, ClipboardList, CreditCard, RefreshCw, ShieldAlert } from "lucide-react";
 
 import { PaymentSummary } from "@/components/payment/PaymentSummary";
+import { StripeTestCardBox } from "@/components/payment/StripeTestCardBox";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
@@ -45,8 +46,9 @@ export function PaymentFailure({
       </div>
 
       {sessionData ? (
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           <PaymentSummary sessionData={sessionData} />
+          {sessionData.canRetryPayment ? <StripeTestCardBox compact /> : null}
         </div>
       ) : null}
 

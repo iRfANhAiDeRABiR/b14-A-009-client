@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { formatCurrencyBDT } from "@/lib/rentalPricing";
 import { RentalPriceCalculator } from "@/components/equipment/RentalPriceCalculator";
+import { StripeTestCardBox } from "@/components/payment/StripeTestCardBox";
 
 export function BookingSummary({
   equipmentName,
@@ -55,6 +56,7 @@ export function BookingSummary({
       </div>
 
       <RentalPriceCalculator estimate={estimate} />
+      <StripeTestCardBox />
     </motion.div>
   );
 }

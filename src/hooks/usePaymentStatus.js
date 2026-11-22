@@ -16,6 +16,7 @@ import {
   createCheckoutSession,
   getBookingPaymentStatus,
   getPaymentSession,
+  verifyPaymentSession,
 } from "@/services/paymentService";
 
 export function usePaymentStatus({ mode = "verify" } = {}) {
@@ -32,6 +33,7 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
   const [refreshTick, setRefreshTick] = React.useState(0);
   const [pollAttempts, setPollAttempts] = React.useState(0);
   const [isRetryingCheckout, setIsRetryingCheckout] = React.useState(false);
+  const verifiedSyncSessionRef = React.useRef("");
 
   const hasLookupKey = Boolean(
     (sessionId && isValidStripeSessionId(sessionId)) || bookingId
@@ -68,8 +70,34 @@ export function usePaymentStatus({ mode = "verify" } = {}) {
       : getBookingPaymentStatus(bookingId, { token });
 
     verifyPromise
-      .then((normalized) => {
+      .then(async (normalized) => {
         if (!active) return;
+
+        // If on /payment/success and webhook hasn't confirmed yet, perform one direct Stripe session verification sync
+        if (
+          mode === "verify" &&
+          hasValidSession &&
+          normalized?.verificationState === PAYMENT_VERIFICATION_STATES.PROCESSING &&
+          verifiedSyncSessionRef.current !== sessionId
+        ) {
+          verifiedSyncSessionRef.current = sessionId;
+          try {
+            const synced = await verifyPaymentSession(sessionId, { token });
+            if (active && synced) {
+              setState({
+                loadedKey: requestKey,
+                verificationState: synced.verificationState,
+                sessionData: synced,
+                error: null,
+                errorStatus: null,
+              });
+              return;
+            }
+          } catch {
+            // Keep existing polling flow if direct verification encounters transient error
+          }
+        }
+
         setState({
           loadedKey: requestKey,
           verificationState: normalized.verificationState,
