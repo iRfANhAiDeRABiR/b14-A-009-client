@@ -250,6 +250,19 @@ export function MyRentalsTable() {
                           <Badge variant={paymentBadge.variant} size="sm">
                             {paymentBadge.label}
                           </Badge>
+                          {rental.transactionId ? (
+                            <div
+                              title={rental.transactionId}
+                              className="mt-1 max-w-32 truncate font-mono text-[11px] text-muted"
+                            >
+                              Txn: {rental.transactionId}
+                            </div>
+                          ) : null}
+                          {rental.paidAt ? (
+                            <div className="mt-0.5 text-[11px] text-text-secondary">
+                              {formatDisplayDate(rental.paidAt)}
+                            </div>
+                          ) : null}
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <Badge variant={bookingBadge.variant} dot size="sm">

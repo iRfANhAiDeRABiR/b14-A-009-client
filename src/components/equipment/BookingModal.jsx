@@ -6,14 +6,13 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AlertCircle, Calendar, Lock, ShieldCheck, X } from "lucide-react";
 
 import { buildLoginRedirectUrl } from "@/lib/authBoundary";
+import { isApprovedStripeCheckoutUrl } from "@/lib/paymentUtils";
 import {
   calculateRentalEstimate,
   getTodayDateString,
 } from "@/lib/rentalPricing";
-import {
-  checkBookingAvailability,
-  createBooking,
-} from "@/services/bookingService";
+import { checkBookingAvailability } from "@/services/bookingService";
+import { createCheckoutSession } from "@/services/paymentService";
 import { useToast } from "@/context/ToastContext";
 import { BookingSummary } from "@/components/equipment/BookingSummary";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +42,8 @@ export function BookingModal({
   const { showToast } = useToast();
   const closeButtonRef = React.useRef(null);
   const errorBannerRef = React.useRef(null);
+  const submitLockRef = React.useRef(false);
+  const idempotencyKeyRef = React.useRef("");
 
   const today = React.useMemo(() => getTodayDateString(), []);
   const maxAvailable = Math.max(0, Number(equipment?.availableQuantity) || 0);
@@ -111,6 +112,7 @@ export function BookingModal({
 
   const setField = (field) => (event) => {
     const value = event.target.value;
+    idempotencyKeyRef.current = "";
     setFormValues((prev) => ({ ...prev, [field]: value }));
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: "" }));
@@ -169,7 +171,7 @@ export function BookingModal({
 
   const handleConfirmBooking = async (event) => {
     event.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || submitLockRef.current) return;
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
@@ -184,6 +186,7 @@ export function BookingModal({
       return;
     }
 
+    submitLockRef.current = true;
     setSubmissionError("");
     setIsSubmitting(true);
 
@@ -226,48 +229,51 @@ export function BookingModal({
         return;
       }
 
-      const bookingResult = await createBooking({
-        equipmentId: equipment._id,
-        startDate: formValues.startDate,
-        endDate: formValues.endDate,
-        quantity: Number(formValues.quantity),
-        contactNumber: formValues.contactNumber.trim(),
-        deliveryAddress: formValues.deliveryAddress.trim(),
-        additionalNotes: formValues.additionalNotes.trim(),
-        token: activeToken,
-      });
-
-      if (
-        bookingResult?.checkoutUrl &&
-        (/^https:\/\//i.test(bookingResult.checkoutUrl) ||
-          bookingResult.checkoutUrl.startsWith("/"))
-      ) {
-        window.location.assign(bookingResult.checkoutUrl);
-        return;
+      if (!idempotencyKeyRef.current) {
+        idempotencyKeyRef.current =
+          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `checkout-${equipment._id}-${Date.now()}`;
       }
 
-      showToast({
-        title: "Booking created",
-        description:
-          "Reservation created. Stripe checkout URL is not available yet.",
-        variant: "neutral",
-      });
-      setSubmissionError(
-        "Booking was submitted, but no Stripe checkoutUrl was returned by the server yet."
+      const checkoutResult = await createCheckoutSession(
+        {
+          equipmentId: equipment._id,
+          startDate: formValues.startDate,
+          endDate: formValues.endDate,
+          quantity: Number(formValues.quantity),
+          contactNumber: formValues.contactNumber.trim(),
+          deliveryAddress: formValues.deliveryAddress.trim(),
+          additionalNotes: formValues.additionalNotes.trim(),
+          idempotencyKey: idempotencyKeyRef.current,
+        },
+        { token: activeToken }
       );
+
+      if (!isApprovedStripeCheckoutUrl(checkoutResult?.checkoutUrl)) {
+        throw new Error(
+          checkoutResult?.checkoutUrl
+            ? "Blocked redirect to an unapproved checkout URL. Expected a verified HTTPS Stripe Checkout URL."
+            : "Booking was submitted, but the server did not return a Stripe Checkout URL."
+        );
+      }
+
+      window.location.assign(checkoutResult.checkoutUrl);
     } catch (error) {
+      idempotencyKeyRef.current = "";
       const message =
         error instanceof Error
           ? error.message
-          : "Unable to complete booking request.";
+          : "Unable to complete booking and payment checkout request.";
       setSubmissionError(message);
       showToast({
-        title: "Booking not completed",
+        title: "Checkout unavailable",
         description: message,
         variant: "error",
       });
       setTimeout(() => errorBannerRef.current?.focus(), 0);
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -541,9 +547,9 @@ export function BookingModal({
                     variant="primary"
                     size="md"
                     loading={isSubmitting}
-                    disabled={maxAvailable <= 0}
+                    disabled={maxAvailable <= 0 || isSubmitting}
                   >
-                    Confirm Booking
+                    {isSubmitting ? "Preparing Checkout..." : "Confirm Booking"}
                   </Button>
                 </div>
               </div>

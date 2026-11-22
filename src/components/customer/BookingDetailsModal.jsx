@@ -16,13 +16,16 @@ import {
   X,
 } from "lucide-react";
 
+import { useToast } from "@/context/ToastContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
   formatBookingDuration,
   formatDisplayDate,
   getBookingStatusBadge,
 } from "@/lib/customerUtils";
+import { isApprovedStripeCheckoutUrl } from "@/lib/paymentUtils";
 import { getBookingDetails } from "@/services/bookingService";
+import { createCheckoutSession } from "@/services/paymentService";
 import { BookingPaymentSummary } from "@/components/customer/BookingPaymentSummary";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -30,8 +33,10 @@ import { Button } from "@/components/ui/Button";
 export function BookingDetailsModal({ booking, onClose }) {
   const isOpen = Boolean(booking);
   const prefersReducedMotion = useReducedMotion();
-  const { token } = useAuth();
+  const { showToast } = useToast();
+  const { token, getToken } = useAuth();
   const closeButtonRef = React.useRef(null);
+  const [isStartingPayment, setIsStartingPayment] = React.useState(false);
 
   const bookingId = booking?._id || "";
 
@@ -130,6 +135,50 @@ export function BookingDetailsModal({ booking, onClose }) {
       activeRecord?.deliveryAddress ||
       activeRecord?.additionalNotes
   );
+
+  const normalizedPaymentState = String(
+    activeRecord?.paymentStatus || ""
+  ).toLowerCase();
+  const normalizedBookingState = String(
+    activeRecord?.bookingStatus || ""
+  ).toLowerCase();
+  const canRetryBookingPayment = Boolean(
+    activeRecord?._id &&
+      (normalizedPaymentState === "pending" ||
+        normalizedPaymentState === "failed") &&
+      normalizedBookingState !== "cancelled" &&
+      normalizedBookingState !== "completed"
+  );
+
+  const handleCompletePayment = async () => {
+    if (!activeRecord?._id || isStartingPayment) return;
+    setIsStartingPayment(true);
+    try {
+      const activeToken =
+        token || (typeof getToken === "function" ? await getToken() : null);
+      const session = await createCheckoutSession(
+        { bookingId: activeRecord._id },
+        { token: activeToken }
+      );
+      if (!isApprovedStripeCheckoutUrl(session?.checkoutUrl)) {
+        throw new Error(
+          "Server did not return a verified HTTPS Stripe Checkout URL."
+        );
+      }
+      window.location.assign(session.checkoutUrl);
+    } catch (err) {
+      showToast({
+        title: "Checkout unavailable",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Unable to initiate Stripe payment right now.",
+        variant: "error",
+      });
+    } finally {
+      setIsStartingPayment(false);
+    }
+  };
 
   const showHardDetailError =
     detailState.loadedId === bookingId &&
@@ -458,6 +507,16 @@ export function BookingDetailsModal({ booking, onClose }) {
 
             {/* Footer Actions */}
             <footer className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-border bg-background px-5 py-3.5 sm:rounded-b-2xl sm:px-6">
+              {canRetryBookingPayment ? (
+                <Button
+                  variant="outline"
+                  size="md"
+                  loading={isStartingPayment}
+                  onClick={handleCompletePayment}
+                >
+                  Complete Payment
+                </Button>
+              ) : null}
               <Button variant="primary" size="md" onClick={onClose}>
                 Close
               </Button>
