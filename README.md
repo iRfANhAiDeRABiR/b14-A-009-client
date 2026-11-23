@@ -123,7 +123,7 @@ flowchart LR
 ## Application Routes
 
 <details>
-<summary>View complete route inventory (35 routes + dynamic auth proxy)</summary>
+<summary>View complete route inventory (36 routes + dynamic auth proxy)</summary>
 
 ### Public Routes
 | Route | Description |
@@ -163,6 +163,7 @@ flowchart LR
 | `/dashboard/admin/users` | Admin | User directory, role changes, suspend/reactivate, edit profile, & delete |
 | `/dashboard/admin/equipment` | Admin | Equipment moderation queue (`Approve`, `Reject`, `Edit`, `Delete`) + audit history |
 | `/dashboard/admin/rentals` | Admin | Platform bookings table, CSV export, and internal governance notes |
+| `/dashboard/admin/payments` | Admin | Platform payment history table with revenue KPI cards, filters, Stripe ID inspection modal, & CSV export |
 | `/dashboard/admin/inquiries` | Admin | Customer contact inbox with resolve & cleanup controls |
 | `/dashboard/admin/logs` | Admin | Filterable administrative audit log timeline & CSV export |
 | `/dashboard/admin/profile` | Admin | Administrator profile settings |
