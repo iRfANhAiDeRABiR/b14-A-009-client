@@ -123,6 +123,12 @@ export const ADMIN_SIDEBAR_ITEMS = [
     description: "Review, respond to, and resolve customer & owner inquiries",
   },
   {
+    label: "Payments",
+    href: "/dashboard/admin/payments",
+    icon: "payments",
+    description: "Review every customer payment with booking and Stripe transaction details",
+  },
+  {
     label: "Event Log",
     href: "/dashboard/admin/logs",
     icon: "logs",
